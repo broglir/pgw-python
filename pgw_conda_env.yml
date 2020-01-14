@@ -1,0 +1,17 @@
+name: pgw-python3
+channels:
+- conda-forge
+- defaults
+
+dependencies:
+- python=3.7
+- pip
+- numpy
+- matplotlib
+- xarray
+- scipy
+- xesmf
+- ipython
+- cftime
+- netcdf4
+- nc-time-axis
