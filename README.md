@@ -14,7 +14,7 @@ settings.py -- an example of a kind of "master" script that can be used to provi
 and run the utiliy scripts below. Must be changed based on own system.
 
 humidity_difference_via_RH.py -- Calculate the difference in specific humidity between two time steps using relative humidity. 
-Has been shown to prevent lateral boundaries dry unrealistically: https://doi.org/10.1007/s00382-016-3276-3
+Has been shown to prevent lateral boundaries from drying unrealistically here https://doi.org/10.1007/s00382-016-3276-3
 
 timesmoothing.py -- Smooth a noisy timeseries (mean annual cycle of a change in a specific varaible)
 using a spectral filter. An example output can be seen in Figure S4 here: 
