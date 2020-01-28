@@ -13,11 +13,12 @@ python module to run the python scripts
 settings.py -- an example of a kind of "master" script that can be used to provide information
 and run the utiliy scripts below. Must be changed based on own system.
 
+humidity_difference_via_RH.py -- Calculate the difference in specific humidity between two time steps using relative humidity. 
+Has been shown to prevent lateral boundaries dry unrealistically: https://doi.org/10.1007/s00382-016-3276-3
+
 timesmoothing.py -- Smooth a noisy timeseries (mean annual cycle of a change in a specific varaible)
 using a spectral filter. An example output can be seen in Figure S4 here: 
 https://iopscience.iop.org/1748-9326/14/11/114017/media/ERL_14_11_114017_suppdata.pdf
 
 interpolate.py -- interpolate a mean annual cycle with either daily or monthly resolution to the
 frequency needed for the lateral boundaies (update frequency)
-
-more files to follow soon...
