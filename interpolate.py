@@ -25,7 +25,7 @@ def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, output
 	"""
 
 	#open the inputfile and variable
-	infile = xr.open_dataset(filepath, decode_cf=False)[variablename].squeeze()
+	infile = xr.open_dataset(filepath)[variablename].squeeze()
 
 	#enumerate the time steps for easyier interpolation
 	timesteps = len(infile['time'])
