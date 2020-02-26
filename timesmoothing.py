@@ -87,36 +87,37 @@ def harmonic_ac_analysis(ts):
 		mean: the mean of the timeseries (needed for reconstruction)
 	"""
 	
-	if np.any(np.isnan(ts) == True): #abort if there are nans
-		sys.exit('There are nan values')
+	if np.any(np.isnan(ts) == True): #if there are nans, return nans
+		smooths = np.full_like(ts, np.nan) #sys.exit('There are nan values')
+		return smooths
+	else:
+		mean = ts.mean() #calculate the mean of the timeseries (used for reconstruction)
 	
-	mean = ts.mean() #calculate the mean of the timeseries (used for reconstruction)
+		lt = len(ts) #how long is the timeseries?
+		P = lt
+
+		#initialize the output array. we will use at max 4 modes for reconstruction (for peformance reasons, it can be increased)
+		hcts = np.zeros((4,lt))
+
+		timevector=np.arange(1,lt+1,1)	#timesteps used in calculation	
+
+		q = math.floor(P/2.) #a measure that is to check that the performed calculation is justified.
 	
-	lt = len(ts) #how long is the timeseries?
-	P = lt
-
-	#initialize the output array. we will use at max 4 modes for reconstruction (for peformance reasons, it can be increased)
-	hcts = np.zeros((4,lt))
-
-	timevector=np.arange(1,lt+1,1)	#timesteps used in calculation	
-
-	q = math.floor(P/2.) #a measure that is to check that the performed calculation is justified.
-	
-	for i in range(1,4): #create the reconstruction timeseries, mode by mode (starting at 1 until 5, if one wants more smoothing this number can be increased.)
-		if i < q: #only if this is true the calculation is valid
+		for i in range(1,4): #create the reconstruction timeseries, mode by mode (starting at 1 until 5, if one wants more smoothing this number can be increased.)
+			if i < q: #only if this is true the calculation is valid
 			
-			#these are the formulas from Storch & Zwiers
-			bracket = 2.*math.pi*i/P*timevector
-			a = 2./lt*(ts.dot(np.cos(bracket))) #careful with multiplications of vectors (ts and timevector)..
-			b = 2./lt*(ts.dot(np.sin(bracket))) #dot product (Skalarprodukt) for scalar number output!
+				#these are the formulas from Storch & Zwiers
+				bracket = 2.*math.pi*i/P*timevector
+				a = 2./lt*(ts.dot(np.cos(bracket))) #careful with multiplications of vectors (ts and timevector)..
+				b = 2./lt*(ts.dot(np.sin(bracket))) #dot product (Skalarprodukt) for scalar number output!
 				
-			hcts[i-1,:] = a * np.cos(bracket) + b * np.sin(bracket) #calculate the reconstruction time series
+				hcts[i-1,:] = a * np.cos(bracket) + b * np.sin(bracket) #calculate the reconstruction time series
 			
-		else: #abort if the above condition is not fulfilled. In this case more programming is needed.
-			sys.exit('Whooops that should not be the case for a yearly timeseries! i (reconstruction grade) is larger than the number of timeseries elements / 2.')
+			else: #abort if the above condition is not fulfilled. In this case more programming is needed.
+				sys.exit('Whooops that should not be the case for a yearly timeseries! i (reconstruction grade) is larger than the number of timeseries elements / 2.')
 
-	smooths = sum(hcts[0:3,:]) + mean
-	return smooths
+		smooths = sum(hcts[0:3,:]) + mean
+		return smooths
 
 
 if __name__ == "__main__":
