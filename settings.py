@@ -2,62 +2,59 @@
 
 import subprocess
 
-#should change in specific humidity be computed from relative humidity?
-calhumidity = True
-
-# settings for humidity routine. See documentation in humidity_difference_via_RH.py
-if calhumidity == True:
-	
-	humidity_hist_path = '/home/broglir/polybox/pgw-python/RELHUM_CT_Part.nc'
-	pressure_hist_path = '/home/broglir/polybox/pgw-python/P_CT_Part.nc'
-	temperature_hist_path =  '/home/broglir/polybox/pgw-python/T_CT_Part.nc'
-
-	humidity_future_path = '/home/broglir/polybox/pgw-python/RELHUM_SC_Part.nc'
-	pressure_future_path = '/home/broglir/polybox/pgw-python/P_SC_Part.nc'
-	temperature_future_path = '/home/broglir/polybox/pgw-python/T_SC_Part.nc'
-
-	savename = '/home/broglir/polybox/pgw-python/spec_hum_diff.nc'
-
-	humidityname='RELHUM'
-	pressurename='P'
-	temperaturename='T'
-	savevariablename = 'QV'
-
-	commandhum = f"python humidity_difference_via_RH.py {humidity_hist_path} {pressure_hist_path} {temperature_hist_path} {humidity_future_path} {pressure_future_path} {temperature_future_path} {savename} {humidityname} {pressurename} {temperaturename} {savevariablename} > outfile_calhum.txt &"
-	subprocess.run(commandhum, shell=True)
-	print(commandhum)
-
 
 performsmooth = False
 if performsmooth == True:
 #settings for timesmoothing script:
 
 	#list of the files that contain the variables to be smoothed
-	annualcycleraw = '/home/broglir/polybox/python_pgw/diff_ydaymean_T_2M.nc'
+	samepath = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/'
+	annualcycleraw = [
+	samepath+'hus_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'huss_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'psl_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'ta_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'tas_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'ua_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'uas_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'va_MPI-ESM1-2-HR_diff_ydaymean.nc',
+	samepath+'vas_MPI-ESM1-2-HR_diff_ydaymean.nc'
+	]
 	#list of variablenames
-	variablename_to_smooth = 'T_2M'
+	variablename_to_smooth = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
 	#path to put the output netcdf
-	outputpath = '/home/broglir/polybox/python_pgw/'
+	outputpath = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/smoothed/'
 
 
 	#enter the command to run the script:
-	commandsmooth = f"python timesmoothing.py {annualcycleraw} {variablename_to_smooth} {outputpath} > outputfile_smooth.txt &"
-	subprocess.run(commandsmooth, shell=True)
-	print(commandsmooth)
+	for num,pathi in enumerate(annualcycleraw):
+		commandsmooth = f"python timesmoothing.py {pathi} {variablename_to_smooth[num]} {outputpath} > outputfile_smooth_{variablename_to_smooth[num]}.txt &"
+		subprocess.run(commandsmooth, shell=True)
+		print(commandsmooth)
     
 
-performinterp = False
+performinterp = True
 if performinterp == True:
 	#see documentation in interpolate.py
-	filepathint = '/Users/roman/polybox/python_pgw/T_2M_flteredcycle.nc'
-	variablename = 'T_2M'
-	outputtimesteps = 360 * 4
+	samepath='/store/c2sm/ch4/robro/surrogate_input/GCMdata/smoothed/'
+	
+	filepathint = [
+	samepath+'hus_filteredcycle.nc',
+	samepath+'huss_filteredcycle.nc',
+	samepath+'psl_filteredcycle.nc',
+	samepath+'ta_filteredcycle.nc',
+	samepath+'tas_filteredcycle.nc',
+	samepath+'ua_filteredcycle.nc',
+	samepath+'uas_filteredcycle.nc',
+	samepath+'va_filteredcycle.nc',
+	samepath+'vas_filteredcycle.nc'
+	]
+	variablename = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
+	outputtimesteps = 366 * 4
 	inputfreq = 'day'
-	outputpath_int = '/lhome/broglir/netcdf/to_delete'
+	outputpath_int = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/interpolated'
     
-    
-	commandint = f"python interpolate.py {filepathint} {variablename} {outputtimesteps} {inputfreq} {outputpath_int} > outputfile_interp.txt &"
-	subprocess.run(commandint, shell=True)
-	print(commandint)
-
-
+	for numi,pathin in enumerate(filepathint):  
+		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int} > outputfile_interp.txt &"
+		subprocess.run(commandint, shell=True)
+		print(commandint)
