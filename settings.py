@@ -33,7 +33,7 @@ if performsmooth == True:
 		print(commandsmooth)
     
 
-performinterp = True
+performinterp = False
 if performinterp == True:
 	#see documentation in interpolate.py
 	samepath='/store/c2sm/ch4/robro/surrogate_input/GCMdata/smoothed/'
@@ -58,3 +58,20 @@ if performinterp == True:
 		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int} > outputfile_interp.txt &"
 		subprocess.run(commandint, shell=True)
 		print(commandint)
+
+
+regridhori = True
+
+if regridhori == True:
+
+	infolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/interpolated'
+	variablename = 'vas'
+	inputtimesteps = 4
+	outputgridfile = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
+	outputfolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/regridded'
+
+	comandreghor = f"python regrid_horizontal.py {infolder} {variablename} {inputtimesteps} {outputgridfile} {outputfolder}"
+
+	print(comandreghor)
+	subprocess.run(comandreghor, shell=True)
+

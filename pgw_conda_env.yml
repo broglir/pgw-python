@@ -11,6 +11,7 @@ dependencies:
 - xarray
 - scipy
 - xesmf
+- esmpy<=7.1.0
 - ipython
 - cftime
 - netcdf4
