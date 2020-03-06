@@ -65,13 +65,14 @@ regridhori = True
 if regridhori == True:
 
 	infolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/interpolated'
-	variablename = 'vas'
-	inputtimesteps = 4
+	variablename = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
+	inputtimesteps = 4 * 366
 	outputgridfile = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
 	outputfolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/regridded'
 
-	comandreghor = f"python regrid_horizontal.py {infolder} {variablename} {inputtimesteps} {outputgridfile} {outputfolder}"
+	for variable in variablename:
+		#get the python command and write a file to submit to the piz daint machine
+		comandreghor = f"python regrid_horizontal.py {infolder} {variable} {inputtimesteps} {outputgridfile} {outputfolder} > out_regrid.txt &" 
 
-	print(comandreghor)
-	subprocess.run(comandreghor, shell=True)
+		subprocess.run(comandreghor, shell=True)
 
