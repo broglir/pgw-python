@@ -60,7 +60,7 @@ if performinterp == True:
 		print(commandint)
 
 
-regridhori = True
+regridhori = False
 
 if regridhori == True:
 
@@ -76,3 +76,47 @@ if regridhori == True:
 
 		subprocess.run(comandreghor, shell=True)
 
+
+regridvert = True
+
+if regridvert == True:
+
+	terrainpath = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
+	datapath = '/scratch/snx3000/robro/regridded/regridded/'
+	variablename = ['hus', 'ta', 'ua', 'va']
+	outvar = ['QV', 'T', 'U', 'V']
+	outputpath = '/scratch/snx3000/robro/regridded/final/'
+	vcflat = 11357 #height where modellevels become flat
+	inputtimesteps = 4 * 366
+
+	for variable, outv in zip(variablename, outvar):
+		comandregver = f"srun python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps}"
+		#comandregver = f"python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps} &"
+
+		print(comandregver)
+		
+		#create a run script for each variable. Run it manually in the scratch directory afterwards:
+		with open (f'/scratch/snx/3000/submit_{variable}.bash', 'w') as rsh:
+			rsh.write(f'''\
+#!/bin/bash -l
+#SBATCH --job-name="regrid"
+#SBATCH --time=00:03:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-core=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=12
+#SBATCH --partition=normal
+#SBATCH --constraint=gpu
+#SBATCH --hint=nomultithread
+#SBATCH --account=pr04
+
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+set -ex
+
+source activate pgw-python3
+
+{comandregver}
+
+exit
+''')
