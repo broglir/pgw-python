@@ -3,9 +3,9 @@
 import xarray as xr
 import numpy as np
 import sys
+import time
 
-
-def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps):
+def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps, starttime=0):
 	"""
 	Note: This function is specific to a certain verical grid in the cclm regional climate model and can only be used for that specific grid!
 	"""
@@ -24,7 +24,7 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 	smoothing = (vcflat - hlevels_flat) / vcflat
 	smoothing = np.where(smoothing > 0, smoothing, 0)
 
-	for stepnum in range(inputtimesteps):
+	for stepnum in range(starttime,inputtimesteps):
 		print(stepnum)
 		data = xr.open_dataset(f"{datapath}/{variablename}{stepnum:05d}.nc")[variablename]
 
@@ -44,9 +44,16 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		data.values = newdata
 		data.level.data = outlevels
 		data = data.to_dataset(name=outvar)
-		data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")
-
-
+		try:
+			data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")
+		except:
+			try:
+				time.sleep(2)
+				data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")
+			except:
+				time.sleep(2)
+				data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")	
+		data.close()
 
 if __name__ == "__main__":
 	terrainpath=str(sys.argv[1])
@@ -56,4 +63,5 @@ if __name__ == "__main__":
 	outputpath=str(sys.argv[5])
 	vcflat=int(sys.argv[6])
 	inputtimesteps=int(sys.argv[7])
-	vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps)
+	starttime=int(sys.argv[8])
+	vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps, starttime=starttime)

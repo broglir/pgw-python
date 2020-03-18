@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import subprocess
-
+import os
 
 performsmooth = False
 if performsmooth == True:
@@ -83,28 +83,32 @@ if regridvert == True:
 
 	terrainpath = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
 	datapath = '/scratch/snx3000/robro/regridded/regridded/'
-	variablename = ['hus', 'ta', 'ua', 'va']
+	variablename = ['hus','ta','ua','va']
 	outvar = ['QV', 'T', 'U', 'V']
-	outputpath = '/scratch/snx3000/robro/regridded/final/'
+	outputpath = '/scratch/snx3000/robro/regridded/final_try2/'
 	vcflat = 11357 #height where modellevels become flat
 	inputtimesteps = 4 * 366
+	steps_per_job = 150
+	starttime = 0
 
 	for variable, outv in zip(variablename, outvar):
-		comandregver = f"srun python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps}"
-		#comandregver = f"python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps} &"
+		for start in range(starttime, inputtimesteps, steps_per_job):
+			end_job = start + steps_per_job
+			comandregver = f"srun python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {end_job} {start}"
+			#comandregver = f"python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps} &"
 
-		print(comandregver)
+			print(comandregver)
 		
-		#create a run script for each variable. Run it manually in the scratch directory afterwards:
-		with open (f'/scratch/snx/3000/submit_{variable}.bash', 'w') as rsh:
-			rsh.write(f'''\
+			#create a run script for each variable. 
+			with open (f'/scratch/snx3000/robro/regridded/submit_{variable}.bash', 'w') as rsh:
+				rsh.write(f'''\
 #!/bin/bash -l
-#SBATCH --job-name="regrid"
-#SBATCH --time=00:03:00
+#SBATCH --job-name="reg_{variable}_{start}"
+#SBATCH --time=23:50:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-core=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=1
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
 #SBATCH --hint=nomultithread
@@ -120,3 +124,6 @@ source activate pgw-python3
 
 exit
 ''')
+			os.chdir('/scratch/snx3000/robro/regridded/')
+			subprocess.run('cp /project/pr04/robro/pgw-python/cclm_vertical.py /scratch/snx3000/robro/regridded/', shell=True)
+			subprocess.run(f'sbatch submit_{variable}.bash', shell=True)
