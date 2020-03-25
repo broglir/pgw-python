@@ -44,16 +44,16 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		data.values = newdata
 		data.level.data = outlevels
 		data = data.to_dataset(name=outvar)
-		try:
-			data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")
-		except:
+		#try to fix weird saving problem; shold not be necessary if not more one job per node is requested.
+		dummy=0
+		while dummy < 1000:
 			try:
-				time.sleep(2)
 				data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")
+				data.close()
+				dummy = 2000
 			except:
-				time.sleep(2)
-				data.to_netcdf(f"{outputpath}/{outvar}{stepnum:05d}.nc")	
-		data.close()
+				time.sleep(0.5)
+				dummy = dummy+1
 
 if __name__ == "__main__":
 	terrainpath=str(sys.argv[1])

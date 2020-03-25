@@ -77,7 +77,9 @@ if regridhori == True:
 		subprocess.run(comandreghor, shell=True)
 
 
-regridvert = True
+
+#this part is software/hardware specific for the piz daint supercomputer on CSCS
+regridvert = False
 
 if regridvert == True:
 
@@ -88,18 +90,17 @@ if regridvert == True:
 	outputpath = '/scratch/snx3000/robro/regridded/final_try2/'
 	vcflat = 11357 #height where modellevels become flat
 	inputtimesteps = 4 * 366
-	steps_per_job = 150
+	steps_per_job = 150 #split the job into multiple chucks and run in paralell
 	starttime = 0
 
 	for variable, outv in zip(variablename, outvar):
 		for start in range(starttime, inputtimesteps, steps_per_job):
 			end_job = start + steps_per_job
-			comandregver = f"srun python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {end_job} {start}"
-			#comandregver = f"python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {inputtimesteps} &"
+			comandregver = f"srun -u python cclm_vertical.py {terrainpath} {datapath} {variable} {outv} {outputpath} {vcflat} {end_job} {start}"
 
 			print(comandregver)
 		
-			#create a run script for each variable. 
+			#create a run script for afew timesteps and each variable. 
 			with open (f'/scratch/snx3000/robro/regridded/submit_{variable}.bash', 'w') as rsh:
 				rsh.write(f'''\
 #!/bin/bash -l
@@ -107,8 +108,8 @@ if regridvert == True:
 #SBATCH --time=23:50:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-core=1
-#SBATCH --ntasks-per-node=12
-#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=12
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
 #SBATCH --hint=nomultithread
@@ -124,6 +125,7 @@ source activate pgw-python3
 
 exit
 ''')
+#submit the slurm batch job script from the scratch directory
 			os.chdir('/scratch/snx3000/robro/regridded/')
 			subprocess.run('cp /project/pr04/robro/pgw-python/cclm_vertical.py /scratch/snx3000/robro/regridded/', shell=True)
 			subprocess.run(f'sbatch submit_{variable}.bash', shell=True)
