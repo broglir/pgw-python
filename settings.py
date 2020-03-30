@@ -8,22 +8,21 @@ if performsmooth == True:
 #settings for timesmoothing script:
 
 	#list of the files that contain the variables to be smoothed
-	samepath = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/'
+	samepath = '/project/pr04/robro/inputfiles_for_surrogate_hadgem/input_github/'
 	annualcycleraw = [
-	samepath+'hus_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'huss_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'psl_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'ta_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'tas_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'ua_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'uas_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'va_MPI-ESM1-2-HR_diff_ydaymean.nc',
-	samepath+'vas_MPI-ESM1-2-HR_diff_ydaymean.nc'
+	samepath+'Diff_HadGEM2-ES_RCP85_PP.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_QV.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_QV_S.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_T.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_T_S.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_T_SO.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_U.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_V.nc'
 	]
 	#list of variablenames
-	variablename_to_smooth = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
+	variablename_to_smooth = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V']
 	#path to put the output netcdf
-	outputpath = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/smoothed/'
+	outputpath = '/scratch/snx3000/robro/pgwtemp/smoothed/'
 
 
 	#enter the command to run the script:
@@ -33,26 +32,25 @@ if performsmooth == True:
 		print(commandsmooth)
     
 
-performinterp = False
+performinterp = True
 if performinterp == True:
 	#see documentation in interpolate.py
-	samepath='/store/c2sm/ch4/robro/surrogate_input/GCMdata/smoothed/'
+	samepath='/scratch/snx3000/robro/pgwtemp/smoothed/'
 	
 	filepathint = [
-	samepath+'hus_filteredcycle.nc',
-	samepath+'huss_filteredcycle.nc',
-	samepath+'psl_filteredcycle.nc',
-	samepath+'ta_filteredcycle.nc',
-	samepath+'tas_filteredcycle.nc',
-	samepath+'ua_filteredcycle.nc',
-	samepath+'uas_filteredcycle.nc',
-	samepath+'va_filteredcycle.nc',
-	samepath+'vas_filteredcycle.nc'
+	samepath+'PP_filteredcycle.nc',
+	samepath+'QV_filteredcycle.nc',
+	samepath+'QV_S_filteredcycle.nc',
+	samepath+'T_filteredcycle.nc',
+	samepath+'T_S_filteredcycle.nc',
+	samepath+'T_SO_filteredcycle.nc',
+	samepath+'U_filteredcycle.nc',
+	samepath+'V_filteredcycle.nc',
 	]
-	variablename = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
-	outputtimesteps = 366 * 4
+	variablename = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V']
+	outputtimesteps = 360 * 4
 	inputfreq = 'day'
-	outputpath_int = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/interpolated'
+	outputpath_int = '/scratch/snx3000/robro/pgwtemp/interpolated/'
     
 	for numi,pathin in enumerate(filepathint):  
 		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int} > outputfile_interp.txt &"
