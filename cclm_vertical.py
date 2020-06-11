@@ -4,6 +4,7 @@ import xarray as xr
 import numpy as np
 import sys
 import time
+from pathlib import Path
 
 def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps, starttime=0):
 	"""
@@ -24,6 +25,8 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 	smoothing = (vcflat - hlevels_flat) / vcflat
 	smoothing = np.where(smoothing > 0, smoothing, 0)
 
+	Path(outputpath).mkdir(parents=True, exist_ok=True)
+	
 	for stepnum in range(starttime,inputtimesteps):
 		print(stepnum)
 		data = xr.open_dataset(f"{datapath}/{variablename}{stepnum:05d}.nc")[variablename]

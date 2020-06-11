@@ -5,6 +5,7 @@ import xarray as xr
 import numpy as np
 import sys
 import math
+from pathlib import Path
 
 def filterdata(annualcycleraw, variablename_to_smooth, outputpath):
 
@@ -67,6 +68,7 @@ def filterdata(annualcycleraw, variablename_to_smooth, outputpath):
 	#del Diff
 
 	Diff = xr.DataArray(Diff, coords=coords, name=variablename_to_smooth)
+	Path(outputpath).mkdir(parents=True, exist_ok=True)
 	Diff.to_netcdf(outputpath+'/'+variablename_to_smooth+'_filteredcycle.nc', mode='w')
 
 	print('saved file '+outputpath+'/'+variablename_to_smooth+'_filteredcycle.nc')

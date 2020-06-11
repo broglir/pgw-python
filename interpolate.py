@@ -3,6 +3,7 @@
 import xarray as xr
 import sys
 import numpy as np
+from pathlib import Path
 
 def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, outputpath='./'):
 	"""
@@ -59,6 +60,7 @@ def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, output
 	outfile['time'] = np.arange(outputtimesteps)
 
 	#save each output timestep in a seperate netcdf file for easyier handling later on
+	Path(outputpath).mkdir(parents=True, exist_ok=True)
 	for filenum in range(outputtimesteps):
 		outfile[filenum].to_netcdf(f"{outputpath}/{variablename}{filenum:05d}.nc", mode='w')       
 

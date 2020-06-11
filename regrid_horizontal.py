@@ -3,6 +3,7 @@
 import xarray as xr
 import xesmf as xe
 import sys
+from pathlib import Path
 
 def regridhorizontal(infolder, variablename, inputtimesteps, outputgridfile, outputfolder):
 	"""
@@ -23,6 +24,8 @@ def regridhorizontal(infolder, variablename, inputtimesteps, outputgridfile, out
 	infile = xr.open_dataset(f"{infolder}/{variablename}00000.nc")
 
 	regridder = xe.Regridder(infile, targetgrid, 'bilinear', reuse_weights=True)
+
+	Path(outputfolder).mkdir(parents=True, exist_ok=True)
 
 	for stepnum in range(inputtimesteps):
 		infile = xr.open_dataset(f"{infolder}/{variablename}{stepnum:05d}.nc")
