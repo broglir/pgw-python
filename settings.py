@@ -8,7 +8,7 @@ if performsmooth == True:
 #settings for timesmoothing script:
 
 	#list of the files that contain the variables to be smoothed
-	samepath = '/project/pr04/robro/inputfiles_for_surrogate_hadgem/input_github/'
+	samepath = '/project/pr94/robro/inputfiles_for_surrogate_hadgem/input_github/'
 	annualcycleraw = [
 	samepath+'Diff_HadGEM2-ES_RCP85_PP.nc',
 	samepath+'Diff_HadGEM2-ES_RCP85_QV.nc',
@@ -17,17 +17,19 @@ if performsmooth == True:
 	samepath+'Diff_HadGEM2-ES_RCP85_T_S.nc',
 	samepath+'Diff_HadGEM2-ES_RCP85_T_SO.nc',
 	samepath+'Diff_HadGEM2-ES_RCP85_U.nc',
-	samepath+'Diff_HadGEM2-ES_RCP85_V.nc'
+	samepath+'Diff_HadGEM2-ES_RCP85_V.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_RELHUM.nc',
+	samepath+'Diff_HadGEM2-ES_RCP85_RELHUM_S.nc'
 	]
 	#list of variablenames
-	variablename_to_smooth = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V']
+	variablename_to_smooth = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V','RELHUM','RELHUM_S']
 	#path to put the output netcdf
 	outputpath = '/scratch/snx3000/robro/pgwtemp/smoothed/'
 
 
 	#enter the command to run the script:
 	for num,pathi in enumerate(annualcycleraw):
-		commandsmooth = f"python timesmoothing.py {pathi} {variablename_to_smooth[num]} {outputpath} > outputfile_smooth_{variablename_to_smooth[num]}.txt &"
+		commandsmooth = f"python timesmoothing.py {pathi} {variablename_to_smooth[num]} {outputpath} > outputfile_smooth.txt &"
 		subprocess.run(commandsmooth, shell=True)
 		print(commandsmooth)
     
@@ -46,8 +48,10 @@ if performinterp == True:
 	samepath+'T_SO_filteredcycle.nc',
 	samepath+'U_filteredcycle.nc',
 	samepath+'V_filteredcycle.nc',
+	samepath+'RELHUM_filteredcycle.nc',
+	samepath+'RELHUM_S_filteredcycle.nc'
 	]
-	variablename = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V']
+	variablename = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V','RELHUM','RELHUM_S']
 	outputtimesteps = 360 * 4
 	inputfreq = 'day'
 	outputpath_int = '/scratch/snx3000/robro/pgwtemp/interpolated/'

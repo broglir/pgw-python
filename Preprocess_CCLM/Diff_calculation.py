@@ -1,13 +1,13 @@
 import xarray as xr
 
-variablenames = ['PP', 'T', 'T_S', 'T_SO', 'U', 'V']
+variablenames = ['RELHUM', 'RELHUM_S']#'PP', 'T', 'T_S', 'T_SO', 'U', 'V']
 
-path_start = '/project/pr04/robro/inputfiles_for_surrogate_hadgem/inputfiles/HadGEM2-ES_Hist_RCP85_cosmo4-8_17_new_'
+path_start = '/project/pr94/robro/inputfiles_for_surrogate_hadgem/inputfiles/HadGEM2-ES_Hist_RCP85_cosmo4-8_17_new_'
 
 pathend_hist = '_1971-2000_ydaymean.nc'
 pathend_fut  = '_2070-2099_ydaymean.nc'
 
-savepath = '/project/pr04/robro/inputfiles_for_surrogate_hadgem/input_github/'
+savepath = '/project/pr94/robro/inputfiles_for_surrogate_hadgem/input_github/'
 
 #the part of the output-filename before the variablename: 
 outputname = 'Diff_HadGEM2-ES_RCP85_'

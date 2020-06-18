@@ -11,18 +11,23 @@ endyear = 2000 #The last year where boundary data is present
 submitdirectory='/scratch/snx3000/robro/pgwtemp' 
 
 #directory where lbfd_adapt.py is located
-scriptdir='/project/pr04/robro/pgw-python/Postprocess_CCLM'
+scriptdir='/project/pr94/robro/pgw-python/Postprocess_CCLM'
 
 for yyyy in range(startyear, endyear + 1):
 	with open (f'{submitdirectory}/submit_{yyyy}.bash', 'w') as rsh:
 		rsh.write(f'''\
 #!/bin/bash -l
 #SBATCH --job-name="adapt_{yyyy}"
-#SBATCH --time=00:30:00
-#SBATCH --partition=prepost
-#SBATCH --constraint=mc
+#SBATCH --time=01:00:00
+#SBATCH --partition=normal
+#SBATCH --constraint=gpu
+#SBATCH --ntasks-per-core=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=12
 #SBATCH --hint=nomultithread
 #SBATCH --account=pr94
+#SBATCH --output=output_{yyyy}
+#SBATCH --error=error_{yyyy}
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 

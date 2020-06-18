@@ -1,19 +1,22 @@
 import xarray as xr
 import sys
-import os
 from pathlib import Path
 import numpy as np
 
 """
 Can be used to add the calculated difference in all necessary variables to the initial condition (laf) file. This very fast, just run it in the console.
+It requires the difference in relative humidity to adapt the specific humidity!
 
 Input:
 	lafpath: Path to the original laf-file from the "base" simulation (e.g. reanalysis driven or historical simulation). The name of the laf file must be as outputted by int2lm (e.g. laf1970010100.nc ).
 	newyear: What year to use in the files (change it to the future to adapt CO2 levels)
 	laftimestep: Which timestep within the annual cycle is apropriate to adapt the laf file? (0 for beginning of year)
 	newtimestring: What timestamp should be used for the adapted laf file? Put the exact time of the new laf file in the format 'seconds since yyyy-mm-dd hh:mm:ss'
-	outputpath: In which folder should the adapted laf file be put (probably the same as the adapted boudary or lbfd files) 
+	outputpath: In which folder should the adapted laf file be put (probably the same as the adapted boudary or lbfd files). Will be created if nonexistent. 
 	Diffspath: Where is the input located, i.e. the single files that have been previously produced by the interpolate.py routie or the regridding routines. These are the files called for example T00000.nc
+	vcflat: Altitude where the vertical coordinate levels in CCLM become flat (this can be found in runscripts or YUSPECIF). We assume a Gal-Chen vertical coordinate here.
+	terrainpath: Path to a netcdf file containing the height of the terrain in the cosmo domain (could be a constant file such as lffd1969120100c.nc)
+	height_flat: Array of the geometrical altitude of all model levels in the cclm doman (can be found e.g. in YUSPECIF file). One value for each vertical level (this means there should normally be no level 0)! 
 
 Output:
 	The adapted laf file will be written to the chosen location and should directly be usable for CCLM.
@@ -25,12 +28,8 @@ laftimestep = 0
 newtimestring = 'seconds since 2070-01-01 00:00:00'
 outputpath = '/scratch/snx3000/robro/int2lm/HadGEM/PGW_TEST/2070/'
 Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
-
-
-#options for adaptation of humidity
-vcflat=11430. #altitude where coordinate system becomes flat (you can find that in runscripts)
+vcflat=11430. 
 terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
-#CCLM uses a referece pressure system, to compute the actual pressure it PP needs to be added to the reference. These are the height levels for the 50km simulations!
 height_flat=np.asanyarray([22700.0, 20800.0000, 19100.0, 17550.0, 16150.0, 14900.0, 13800.0, 12785.0, 11875.0, 11020.0, 10205.0,        9440.0, 8710.0, 8015.0, 7355.0, 6725.0, 6130.0, 5565.0, 5035.0, 4530.0, 4060.0, 3615.0, 3200.0, 2815.0, 2455.0, 2125.0, 1820.0, 1545.0, 1295.0, 1070.0, 870.0, 695.0, 542.0, 412.0, 303.0, 214.0, 143.0, 89.0, 49.0, 20.0])
 
 
@@ -123,7 +122,7 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 
 	endpartlaf = lafpath[-9:] 
 	
-	laffile.to_netcdf(f'{outputpath}/laf{newyear}{endpartlaf}', mode='a')
+	laffile.to_netcdf(f'{outputpath}/laf{newyear}{endpartlaf}', mode='w')
 	laffile.close()
 
 pref, pref_sfc = getpref(vcflat, terrainpath, height_flat)
