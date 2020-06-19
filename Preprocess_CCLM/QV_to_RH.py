@@ -2,7 +2,7 @@
 """
 Created on Mon Jul 22 10:06:30 2019
 
-@author: robro
+Script to compute the mean annual cycle in relative humidity from the mean annual cycle in specific humidity. Needs the mean annual cycle in pressure and temperature as input.
 """
 
 
@@ -18,7 +18,7 @@ atmos = True
 superpath='/store/c2sm/ch4/robro/surrogate_input/GCMdata/'
 
 qvname = 'hus_MPI-ESM1-2-HR_2070-2099_ydaymean.nc'
-ppname = 'p_MPI-ESM1-2-HR_abs_ydaymean.nc'
+pname = 'p_MPI-ESM1-2-HR_abs_ydaymean.nc'
 Tname= 'ta_MPI-ESM1-2-HR_2070-2099_ydaymean.nc'
 
 qvsname='huss_MPI-ESM1-2-HR_1971-2000_ydaymean.nc'
@@ -35,7 +35,7 @@ if atmos == True:
 	print('procedure for 3-D humidity!')
 
 	QV = xr.open_dataset(superpath+qvname)['hus']
-	p = xr.open_dataset(superpath+ppname)['p']
+	p = xr.open_dataset(superpath+pname)['p']
 	T  = xr.open_dataset(superpath+Tname)['ta']
 
 	p['time'] = T['time']

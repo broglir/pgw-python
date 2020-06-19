@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 
 """
-Preprocessing script to convert PP from COSMO-CLM to absolute pressure
+Preprocessing script to convert PP from COSMO-CLM to absolute pressure. This is only necessary if one subsequently wants to compute the mearelative Humidity from Specific humidity. 
 """
 
 #enter paths
