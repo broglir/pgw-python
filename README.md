@@ -38,6 +38,10 @@ Prior to running any scripts from the top-level directory the scripts in the fol
 
 After running the top-level scripts the scripts in the folder "Postprocess_CCLM" can be used to add the climate change deltas to all boundary and initial fields that have been created by int2lm.
 
+**Model Variables to Modify**
+
+For a physically consistent modification of the lateral boundaries as well as a realistic representation of climate change it is recommended to modify atmospheric temperature, wind, humidity and pressure (depending on the vertical coordinate), as well as surface temperature and humidity. Soil temperature or moisture in the inital conditions may also be modified. Another recommendation is to compute the modification of humidity of the target model using the change in relative humidity (an example of how to do this can be found in Postporcessing_CCLM - laf_adapt.py), even though this complicates the workflow, it prevents spurious precipitation/humidity changes.
+
 # Further Documentation
 
 Information about the exact purpose of the single pieces of python software can be found in the docstring of the python files themselves. The purpose of the scripts in the top level directory is briefly summarized below:
