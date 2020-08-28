@@ -7,7 +7,7 @@ here https://doi.org/10.1175/JCLI-D-18-0431.1
 The structure of the repository is built as follows:
 
 The top level directory contains the central scripts to modify lateral boundary conditions of any regional climate model using imput from a global or regional climate model. 
-Two additional directories contain less generic codes that may be used if the regional climate model COSMO-CLM is used to provide the input (Preprocess_CCLM) for the boundary data modification or/and if the boundary data of COSMO-CLM itself needs to be modified (Postprocess_CCLM).
+Two additional directories contain less generic codes that may be used if the regional climate model COSMO-CLM is used to provide the input (Preprocess_CCLM) for the boundary data modification or/and if the boundary data of COSMO-CLM itself needs to be modified (Postprocess_CCLM; documentation [here](/Postprocess_CCLM/README_Postprocessing.md)).
 
 # Workflows Based on Input Data
 
@@ -32,15 +32,15 @@ Same procedure as for daily timescale but step 1) timesmoothing.py can be omitte
 
 **Input from COSMO-CLM**
 
-Prior to running any scripts from the top-level directory the scripts in the folder "Preprocess_CCLM" may be used produce input that is ready to be read by the top-level scripts.
+Prior to running any scripts from the top-level directory the scripts in the folder [Preprocess_CCLM](/Preprocess_CCLM/) may be used produce input that is ready to be read by the top-level scripts.
 
 **Output Intended to Run COSMO-CLM**
 
-After running the top-level scripts the scripts in the folder "Postprocess_CCLM" can be used to add the climate change deltas to all boundary and initial fields that have been created by int2lm.
+After running the top-level scripts the scripts in the folder [Postprocess_ CCLM](/Postprocess_CCLM/) can be used to add the climate change deltas to all boundary and initial fields that have been created by int2lm.
 
 **Model Variables to Modify**
 
-For a physically consistent modification of the lateral boundaries as well as a realistic representation of climate change it is recommended to modify atmospheric temperature, wind, humidity and pressure (depending on the vertical coordinate), as well as surface temperature and humidity. Soil temperature or moisture in the inital conditions may also be modified. Another recommendation is to compute the modification of humidity of the target model using the change in relative humidity (an example of how to do this can be found in Postporcessing_CCLM - laf_adapt.py), even though this complicates the workflow, it prevents spurious precipitation/humidity changes.
+For a physically consistent modification of the lateral boundaries as well as a realistic representation of climate change it is recommended to modify atmospheric temperature, wind, humidity and pressure (depending on the vertical coordinate), as well as surface temperature and humidity. Soil temperature or moisture in the inital conditions may also be modified. Another recommendation is to compute the modification of humidity of the target model using the change in relative humidity (an example of how to do this can be found in [Postprocess_CCLM/laf_adapt.py](/Postprocess_CCLM/laf_adapt.py)), even though this complicates the workflow, it prevents spurious precipitation/humidity changes.
 
 # Further Documentation
 
