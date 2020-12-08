@@ -9,11 +9,20 @@ The structure of the repository is built as follows:
 The top level directory contains the central scripts to modify lateral boundary conditions of any regional climate model using imput from a global or regional climate model. 
 Two additional directories contain less generic codes that may be used if the regional climate model COSMO-CLM is used to provide the input (Preprocess_CCLM) for the boundary data modification or/and if the boundary data of COSMO-CLM itself needs to be modified (Postprocess_CCLM; documentation [here](/Postprocess_CCLM/README_Postprocessing.md)).
 
+The scripts regrid and preprocess the so-called climate change deltas which subsequently can be added to the original RCM boundary data.
+
 # Workflows Based on Input Data
 
 **Any Data**
 
 The software is written in python 3 and requires multiple python modules. The ennvironment-file **pgw_conda_env.yml** can be used to install a conda environment to run the software. More information about what conda is and how it works: https://docs.conda.io/projects/conda/en/latest/user-guide/index.html#
+
+To install the enviroment, just execute `conda env create -f environment.yml` once conda is installed. 
+
+**Requeriments**
+
+Annual climate deltas from a global climate model in either daily or monthly steps.
+Climate deltas refer to the difference between the fields predicted by the climate model between two different time periods (usually future and present).
 
 **Input On Daily Timescale**
 
@@ -24,7 +33,6 @@ Use settings.py or a similar script to set up the workflow. Run the following sc
 4) regrid_horizontal.py
 5) cclm_vertical.py (caution if an RCM different from CCLM is used this script needs to be replaced or reprogrammed according to the definition of the vertical grid. But it serves as inspiration)
 
-The scripts produce so-called climate change deltas which subsequently can be added to the original RCM boundary data.
 
 **Input on Monthly Timescale**
 
