@@ -34,7 +34,7 @@ laftimestep = 0
 
 if len(sys.argv)>5:
 	lafpath=str(sys.argv[1])
-	new_year=str(sys.argv[2])
+	newyear=str(sys.argv[2])
 	newtimestring = f'seconds since {newyear}-01-01 00:00:00'
 	outputpath=str(sys.argv[3])
 	Diffspath=str(sys.argv[4])
