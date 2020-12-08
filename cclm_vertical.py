@@ -60,6 +60,7 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		data.values = newdata
 #		data.level.data.assign(outlevels)
 		data.assign_coords(level=outlevels)#small bug fixed
+
 		data = data.to_dataset(name=outvar)
 		#try to fix weird saving problem; shold not be necessary if not more one job per node is requested.
 		dummy=0
