@@ -41,5 +41,6 @@ exit
 ''')
 	
 	subprocess.run(f'cp {scriptdir}/lbfd_adapt.py {submitdirectory}', shell=True)
+	subprocess.run(f'cp {scriptdir}/heights.txt {submitdirectory}', shell=True)
 	os.chdir(submitdirectory)
 	subprocess.run(f'sbatch submit_{yyyy}.bash', shell=True)

@@ -38,9 +38,26 @@ difftimesteps = 360 * 4
 #options for adaptation of humidity
 vcflat=11430. 
 terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
+
+
+
 height_flat=np.asanyarray([22700.0, 20800.0000, 19100.0, 17550.0, 16150.0, 14900.0, 13800.0, 12785.0, 11875.0, 11020.0, 10205.0,        9440.0, 8710.0, 8015.0, 7355.0, 6725.0, 6130.0, 5565.0, 5035.0, 4530.0, 4060.0, 3615.0, 3200.0, 2815.0, 2455.0, 2125.0, 1820.0, 1545.0, 1295.0, 1070.0, 870.0, 695.0, 542.0, 412.0, 303.0, 214.0, 143.0, 89.0, 49.0, 20.0])
 
+if len(sys.argv)>5:
+	lbfdpath=str(sys.argv[1])
+	year=str(sys.argv[2])
+	lbfdpath = f'{lbfdpath}/{year}/'
+	changeyears = 100
+	newyear = year + changeyears
+	outputpath=str(sys.argv[3])
+	outputpath=f'{outputpath}/{newyear}/'
+	Diffspath=str(sys.argv[4])
+	terrainpath=str(sys.argv[5])
 
+
+
+if os.path.exists('heights.txt'):
+	height_flat=np.genfromtxt('heights.txt',skip_header=1)[:-1,1]
 
 
 #get reference pressure function
