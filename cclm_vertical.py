@@ -43,9 +43,12 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 				newheight =  hlevels_flat + terrain[x,y].values * smoothing
 				newdata[:,x,y] = data[:,x,y].interp(level=newheight)
 
-
+		print(data.shape)
+		print(outlevels)
+		print(data.level.data)
 		data.values = newdata
-		data.level.data = outlevels
+#		data.level.data.assign(outlevels)
+		data.assign_coords(level=outlevels)#small bug fixed
 		data = data.to_dataset(name=outvar)
 		#try to fix weird saving problem; shold not be necessary if not more one job per node is requested.
 		dummy=0
