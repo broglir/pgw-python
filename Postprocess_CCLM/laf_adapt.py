@@ -2,7 +2,7 @@ import xarray as xr
 import sys
 from pathlib import Path
 import numpy as np
-
+import os
 """
 Can be used to add the calculated difference in all necessary variables to the initial condition (laf) file. This very fast, just run it in the console.
 It requires the difference in relative humidity to adapt the specific humidity!
@@ -24,13 +24,25 @@ Output:
 
 lafpath = '/scratch/snx3000/robro/int2lm/HadGEM/driving_historical/laf1970010100.nc'
 newyear = 2070
-laftimestep = 0
-newtimestring = 'seconds since 2070-01-01 00:00:00'
+newtimestring = f'seconds since {newyear}-01-01 00:00:00'
 outputpath = '/scratch/snx3000/robro/int2lm/HadGEM/PGW_TEST/2070/'
 Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
 vcflat=11430. 
 terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
 height_flat=np.asanyarray([22700.0, 20800.0000, 19100.0, 17550.0, 16150.0, 14900.0, 13800.0, 12785.0, 11875.0, 11020.0, 10205.0,        9440.0, 8710.0, 8015.0, 7355.0, 6725.0, 6130.0, 5565.0, 5035.0, 4530.0, 4060.0, 3615.0, 3200.0, 2815.0, 2455.0, 2125.0, 1820.0, 1545.0, 1295.0, 1070.0, 870.0, 695.0, 542.0, 412.0, 303.0, 214.0, 143.0, 89.0, 49.0, 20.0])
+laftimestep = 0
+
+if len(sys.argv)>5:
+	lafpath=str(sys.argv[1])
+	newyear=str(sys.argv[2])
+	newtimestring = f'seconds since {newyear}-01-01 00:00:00'
+	outputpath=str(sys.argv[3])
+	Diffspath=str(sys.argv[4])
+	terrainpath=str(sys.argv[5])
+
+if os.path.exists('heights.txt'):
+	height_flat=np.genfromtxt('heights.txt',skip_header=1)[:-1,1]
+
 
 
 
@@ -94,7 +106,7 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 
 		p = laffile['PP'] + pref
 		T = laffile['T']
-		p_sfc = laffile['PP'][:,-1,:,:] + pref_sfc
+		p_sfc = np.squeeze(laffile['PP'][:,-1,:,:]) + pref_sfc
 		T_S = laffile['T_S']
 
 		newQV = (newRH.data  * np.exp(17.67*(T.data  - 273.15)/(T.data -29.65))) / ( 0.263 * p.data)
@@ -110,7 +122,7 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 	RH_old, RH_S_old = comprelhums(laffile, pref, pref_sfc)
 
 	#change other variables
-	variables = ['PP','T', 'T_S', 'T_SO', 'U', 'V']
+	variables = ['T', 'T_S', 'U', 'V']
 	for var in variables:
 		diffadd(var, laffile)
 	

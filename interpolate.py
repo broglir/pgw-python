@@ -7,12 +7,14 @@ from pathlib import Path
 
 def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, outputpath='./'):
 	"""
-	Interpolate an annual cyle with sparse data points linearly to higer frequencies.
-	This can be used to interpolate a daily or monthly resolution annual cycle to the frequency that is used to update
+	Interpolate temporally an annual cyle with sparse data points linearly to higher time frequencies.
+	This can be used to interpolate a daily or monthly resolution annual cycle to the
+	 frequency that is used to update. 
+	The file has to contain the climate change signal to add it later  ex. future-present)
 	the boundary conditions in a model.
 
 	Input:
-	filepath: Path to a netcdf file of the annual cycle to be interpolated. 
+	filepath: Path to a netcdf file of the annual cycle of the signal to be interpolated.  
 	variablename: The name of the variable within the given netcdf file which will be interpolated.
 	outputtimesteps: Amount of thimesteps needed as output (e.g. 366 * 4 for output every 6 hours in a gregorian calendar)
 	inputfreq: Either 'day' or 'month': Frequency of the input annual cycle, either daily or monthly averages.

@@ -4,11 +4,18 @@ import sys
 Script to rename variables if necessary; specific to COSMO-CLM
 """
 
-oldpath='/scratch/snx3000/robro/regridded/regridded/'
+
+
+oldpath='/scratch/snx3000/jvergara/PGW/full_interpolation/'
 newpath='/scratch/snx3000/robro/regridded/final_try2/'
 
 variable=str(sys.argv[1])
 newvariable=str(sys.argv[2])
+
+if len(sys.argv[:])>4:
+	#Reading paths from command line
+	oldpath=str(sys.argv[3])
+	newpath=str(sys.argv[4])
 
 for i in range(366 * 4):
 	old = xr.open_dataset(f"{oldpath}/{variable}{i:05d}.nc")

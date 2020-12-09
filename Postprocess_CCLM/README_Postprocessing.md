@@ -2,13 +2,14 @@
 
 This directory includes python scripts to modify the boundary conditions of the Regional climate model CCLM with output from the scripts in the top-level directory. All these scripts can be run if the conda environment given in pgw_conda_env.yml is used.
 
-In contrast to the top level directory all input for the different functions in this folder must be given within the scripts.
+In contrast to the top level directory where settings.py could be used as master script, here  all input for the different functions in this folder must be given within the scripts.
 
 # Typical workflow
 
-**1. rename_2d.py**
+**1. rename_variables.py**
 
-This script can be useful when data from another model than CCLM has been used as input in the previous functions. Using this script the names of variables can be changed to what is used in CCLM. Can be run in command line and takes the old and new variablename as input (e.g. "python rename_2d.py ta T")
+This script can be useful when data from another model than CCLM has been used as input in the previous functions. Using this script the names of variables can be changed to what is used in CCLM. Can be run in command line and takes the old and new variablename as input (e.g. "python rename_variables.py ta T").
+Usually it has to be used to rename the 2d variables that were not renamed by the previous scripts, but its use can be extended. 
 
 **2. laf_adapt.py** 
 
