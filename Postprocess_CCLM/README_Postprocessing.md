@@ -1,8 +1,8 @@
 # Modify COSMO-CLM initial and boundary conditions
 
-This directory includes python scripts to modify the boundary conditions of the Regional climate model CCLM with output from the scripts in the top-level directory. All these scripts can be run if the conda environment given in pgw_conda_env.yml is used.
+This directory includes python scripts to modify the boundary conditions of the Regional climate model CCLM with output from the scripts in the top-level directory. All these scripts can be run if the conda environment given in [pgw_conda_env.yml](/pgw_conda_env.yml) is used.
 
-In contrast to the top level directory where settings.py could be used as master script, here  all input for the different functions in this folder must be given within the scripts.
+If desired, the scripts can be run from the directory's master file [master.py](/Postprocess_CCLM/master.py). Currently, some consistency checks are advisable (e.g. hardcoded value for vcflat in lbfd_adapt.py)
 
 # Typical workflow
 
