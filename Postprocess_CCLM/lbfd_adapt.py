@@ -75,9 +75,32 @@ def getpref(vcflat, terrainpath, height_flat):
 	for x in range(hsurf.shape[0]):
 		for y in range(hsurf.shape[1]):
 			newheights[:,x,y] =  height_flat + hsurf[x,y].values * smoothing
+	
+	#old but somewhat less acurate formulation
+	#pref = 100000*np.exp(-(9.80665*0.0289644*newheights/(8.31447*288.15)))
+	#pref_sfc = 100000*np.exp(-(9.80665*0.0289644*hsurf.data/(8.31447*288.15)))
+	
+	#New formulation as researched by Christian Steger (untested)
+	# Constants
+	p0sl = 100000.0 # sea-level pressure [Pa]
+	t0sl = 288.15   # sea-level temperature [K]
+	# Source: COSMO description Part I, page 29
+	g = 9.80665     # gravitational acceleration [m s-2]
+	R_d = 287.05    # gas constant for dry air [J K-1 kg-1]
+	# Source: COSMO source code, data_constants.f90
 
-	pref = 100000*np.exp(-(9.80665*0.0289644*newheights/(8.31447*288.15)))
-	pref_sfc = 100000*np.exp(-(9.80665*0.0289644*hsurf.data/(8.31447*288.15)))
+	# irefatm = 2
+	delta_t = 75.0
+	h_scal = 10000.0
+	# Source: COSMO description Part VII, page 66
+	t00 = t0sl - delta_t
+	
+	pref = p0sl * np.exp (-g / R_d * h_scal / t00 * \
+                   np.log((np.exp(newheights / h_scal) * t00 + delta_t) / \
+                          (t00 + delta_t)) )
+	pref_sfc = p0sl * np.exp (-g / R_d * h_scal / t00 * \
+                   np.log((np.exp(hsurf.data / h_scal) * t00 + delta_t) / \
+                          (t00 + delta_t)) )
 	
 	return pref, pref_sfc
 
