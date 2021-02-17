@@ -4,6 +4,8 @@ import xarray as xr
 import sys
 import numpy as np
 from pathlib import Path
+import gc
+import dask
 
 def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, outputpath='./'):
 	"""
@@ -54,9 +56,13 @@ def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, output
 		infile = xr.concat([infile,jan], dim='time')
 
 
+	#if len(infile.shape) > 3:
+		#infile = infile.chunk({'plev':1})	
 	#interpolate new output timesteps
-	outfile = infile.interp(time=tnew, method='linear', assume_sorted=True)
+	outfile = infile.interp(time=tnew, method='linear', assume_sorted=True)#.chunk({'time':1})
+	infile.close()
 	del infile
+	gc.collect()
 
 	#numerate outputtimesteps
 	outfile['time'] = np.arange(outputtimesteps)
@@ -66,6 +72,9 @@ def interpannualcycle(filepath, variablename, outputtimesteps, inputfreq, output
 	for filenum in range(outputtimesteps):
 		outfile[filenum].to_netcdf(f"{outputpath}/{variablename}{filenum:05d}.nc", mode='w')       
 
+	outfile.close()
+	del outfile
+	gc.collect()
                 
 if __name__ == "__main__":
 	filepath = str(sys.argv[1])

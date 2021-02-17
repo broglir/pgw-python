@@ -6,6 +6,8 @@ import sys
 import time
 from pathlib import Path
 import os
+from scipy.interpolate import RegularGridInterpolator
+
 def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat, inputtimesteps, starttime=0):
 	"""
 	Note: This function is specific to a certain verical grid in the cclm regional climate model and can only be used for that specific grid!
@@ -19,7 +21,7 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		#Warnign!! the last value is deleted as it correspond to the surface.
 		# If deleted in the heights.txt file, delete the "-1" in the above lines
 		plevels_cclm = plevels_cclm * 100. #convert to pascal
-	else:#use default levels 
+	else:#use default levels
 		print('Using default levels')
 		plevels_cclm =np.asanyarray([13.2831,16.9293,21.1897,26.0707,31.5651,37.6459,44.2959,51.4832,59.0873,67.2557,75.7827,84.8931,94.3575,104.4696,114.9722,126.2605,138.0695,150.8587,164.3444,179.0299,194.4467,211.1740,228.6557,247.5546,267.2140,288.3890,310.3115,333.8365,358.0724,383.9844,411.6542,439.9525, 469.7307, 499.4267,529.9663,558.8535,587.7976,616.6264,645.1941,673.3691,701.0281,727.9977,754.1439,779.3544,803.5253,826.5168,848.2252,868.5767,887.5140,904.9537,920.8323,935.1420,947.8856,959.0633,968.6701,976.7777,983.8329,989.6878,994.2697,997.6310,1000.0000
 ])
@@ -32,12 +34,12 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 
 	terrain = xr.open_dataset(terrainpath)['HSURF'].squeeze()
 	terrain.values[terrain.values < 0] = 0
-	
+
 	smoothing = (vcflat - hlevels_flat) / vcflat
 	smoothing = np.where(smoothing > 0, smoothing, 0)
 
 	Path(outputpath).mkdir(parents=True, exist_ok=True)
-	
+
 	for stepnum in range(starttime,inputtimesteps):
 		print(stepnum)
 		data = xr.open_dataset(f"{datapath}/{variablename}{stepnum:05d}.nc")[variablename]
@@ -47,17 +49,26 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		data = data.rename({'plev':'level'})
 
 		newdata = np.zeros((len(hlevels_flat), terrain.shape[0], terrain.shape[1]))
+		#compute the actual height of all model grid points
+		newheights = hlevels_flat[:,None,None] + terrain.values[None,:,:] * smoothing[:,None,None]
 
-		#add the surface height but respect the terrain following coordinates
-		for x in range(terrain.shape[0]):
-			for y in range(terrain.shape[1]):
-				newheight =  hlevels_flat + terrain[x,y].values * smoothing
-				newdata[:,x,y] = data[:,x,y].interp(level=newheight)
+		#interpolater needs to be ascending, therefore multiply by -1
+		neg_hlev_flat = hlevels_flat * -1
+		neg_newheigths = newheights * -1
 
-		#print(data.shape)
-		#print(outlevels)
-		#print(data.level.data)
-		data.values = newdata
+		#grid dimensions for interpolation function
+		xx = np.arange(terrain.shape[0])
+		yy = np.arange(terrain.shape[1])
+
+		#get index for efficient computation (avoid loops)
+		xid, yid = np.ix_(xx,yy)
+
+		#get the 3D interpolation fucntion
+		fn = RegularGridInterpolator((neg_hlev_flat, xx, yy), data.values)
+
+		#interpolate the data to the actual height in the model
+		data.values = fn((neg_newheigths, xid, yid))
+
 #		data.level.data.assign(outlevels)
 		data.assign_coords(level=outlevels)#small bug fixed
 

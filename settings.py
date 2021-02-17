@@ -34,49 +34,69 @@ if performsmooth == True:
 		print(commandsmooth)
     
 
-performinterp = True
+performinterp = False
 if performinterp == True:
 	#see documentation in interpolate.py
-	samepath='/scratch/snx3000/robro/pgwtemp/smoothed/'
+	samepath='/scratch/snx3000/robro/pgwtemp/'
 	
 	filepathint = [
-	samepath+'PP_filteredcycle.nc',
-	samepath+'QV_filteredcycle.nc',
-	samepath+'QV_S_filteredcycle.nc',
-	samepath+'T_filteredcycle.nc',
-	samepath+'T_S_filteredcycle.nc',
-	samepath+'T_SO_filteredcycle.nc',
-	samepath+'U_filteredcycle.nc',
-	samepath+'V_filteredcycle.nc',
-	samepath+'RELHUM_filteredcycle.nc',
-	samepath+'RELHUM_S_filteredcycle.nc'
+	samepath+'diff_hur.nc',
+	samepath+'diff_hurs.nc',
+	samepath+'diff_ta.nc',
+	samepath+'diff_tas.nc',
+	samepath+'diff_ua.nc',
+	samepath+'diff_va.nc',
 	]
-	variablename = ['PP', 'QV', 'QV_S', 'T', 'T_S', 'T_SO', 'U', 'V','RELHUM','RELHUM_S']
-	outputtimesteps = 360 * 4
-	inputfreq = 'day'
+	variablename = ['hur', 'hurs', 'ta', 'tas', 'ua', 'va']
+	
+	outputtimesteps = 366 * 4
+	inputfreq = 'month'
 	outputpath_int = '/scratch/snx3000/robro/pgwtemp/interpolated/'
     
 	for numi,pathin in enumerate(filepathint):  
-		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int} > outputfile_interp.txt &"
-		subprocess.run(commandint, shell=True)
+		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int}"
 		print(commandint)
+		subprocess.run(commandint, shell=True)
 
 
 regridhori = False
 
 if regridhori == True:
 
-	infolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/interpolated'
-	variablename = ['hus', 'huss', 'psl', 'ta', 'tas', 'ua', 'uas', 'va', 'vas']
+	infolder = '/scratch/snx3000/robro/pgwtemp/interpolated/'
+	variablename = ['hur', 'hurs', 'ta', 'tas', 'ua', 'va']
 	inputtimesteps = 4 * 366
-	outputgridfile = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
-	outputfolder = '/store/c2sm/ch4/robro/surrogate_input/GCMdata/regridded'
-
+	outputgridfile = '/store/c2sm/ch4/robro/surrogate_input/lffd2005112000c.nc'
+	outputfolder = '/scratch/snx3000/robro/pgwtemp/regridded/'
+    
+	#option to run directly
 	for variable in variablename:
 		#get the python command and write a file to submit to the piz daint machine
 		comandreghor = f"python regrid_horizontal.py {infolder} {variable} {inputtimesteps} {outputgridfile} {outputfolder} > out_regrid.txt &" 
-
 		subprocess.run(comandreghor, shell=True)
+		
+	
+	## for efficient parallelization one can run this function also in jupyterlab at cscs if a kernel with all pyton modules is available
+	## first in the console run seperately
+	## from dask.distributed import Client
+	## client = Client(n_workers=6) #one worker per variable
+	
+	##uncomment the following and run settings.py after the client is initialized
+	#from regrid_horizontal import regridhorizontal
+	#from distributed.diagnostics.plugin import UploadFile
+	#from dask import delayed
+	#import os
+	#import dask
+	#tasks=[]
+	#wordir=os.getcwd()
+	
+	#for variable in variablename:
+		#temp = delayed(regridhorizontal)(infolder, variable, inputtimesteps, outputgridfile, outputfolder)
+		#tasks.append(temp)
+	
+	##run this in console after settings.py
+	#client.register_worker_plugin(UploadFile(wordir+"/regrid_horizontal.py")) 
+	#err = dask.compute(*tasks) #this will distribute the computation to the workers
 
 
 
@@ -85,14 +105,15 @@ regridvert = False
 
 if regridvert == True:
 
-	terrainpath = '/scratch/snx3000/lhentge/for_pgw_atlantic/lffd2005112000c.nc'
-	datapath = '/scratch/snx3000/robro/regridded/regridded/'
-	variablename = ['hus','ta','ua','va']
-	outvar = ['QV', 'T', 'U', 'V']
-	outputpath = '/scratch/snx3000/robro/regridded/final_try2/'
+	#note that it it advised to create a height.txt (see example in repository)
+	terrainpath = '/store/c2sm/ch4/robro/surrogate_input/lffd2005112000c.nc'
+	datapath = '/scratch/snx3000/robro/pgwtemp/regridded/'
+	variablename = ['hur','ta','ua','va']
+	outvar = ['RELHUM', 'T', 'U', 'V']
+	outputpath = '/scratch/snx3000/robro/pgwtemp/final2/'
 	vcflat = 11357 #height where modellevels become flat
 	inputtimesteps = 4 * 366
-	steps_per_job = 150 #split the job into multiple chucks and run in paralell
+	steps_per_job = 1000 #split the job into multiple chucks and run in paralell
 	starttime = 0
 
 	for variable, outv in zip(variablename, outvar):
@@ -103,11 +124,11 @@ if regridvert == True:
 			print(comandregver)
 		
 			#create a run script for afew timesteps and each variable. 
-			with open (f'/scratch/snx3000/robro/regridded/submit_{variable}.bash', 'w') as rsh:
+			with open (f'/scratch/snx3000/robro/pgwtemp/pgw-python/submit_{variable}.bash', 'w') as rsh:
 				rsh.write(f'''\
 #!/bin/bash -l
 #SBATCH --job-name="reg_{variable}_{start}"
-#SBATCH --time=23:50:00
+#SBATCH --time=05:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-core=1
 #SBATCH --ntasks-per-node=1
@@ -115,11 +136,14 @@ if regridvert == True:
 #SBATCH --partition=normal
 #SBATCH --constraint=gpu
 #SBATCH --hint=nomultithread
-#SBATCH --account=pr04
+#SBATCH --account=pr94
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 set -ex
+
+module load daint-gpu
+module load cray-netcdf-hdf5parallel
 
 source activate pgw-python3
 
@@ -127,7 +151,7 @@ source activate pgw-python3
 
 exit
 ''')
-#submit the slurm batch job script from the scratch directory
-			os.chdir('/scratch/snx3000/robro/regridded/')
-			subprocess.run('cp /project/pr04/robro/pgw-python/cclm_vertical.py /scratch/snx3000/robro/regridded/', shell=True)
+#submit the slurm batch job script from the scratch directory (change directory if needed)
+			#os.chdir('/scratch/snx3000/robro/pgwtemp/regridded/')
+			#subprocess.run('cp /project/pr04/robro/pgw-python/cclm_vertical.py /scratch/snx3000/robro/regridded/', shell=True)
 			subprocess.run(f'sbatch submit_{variable}.bash', shell=True)

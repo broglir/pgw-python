@@ -23,7 +23,7 @@ def regridhorizontal(infolder, variablename, inputtimesteps, outputgridfile, out
 
 	infile = xr.open_dataset(f"{infolder}/{variablename}00000.nc")
 
-	regridder = xe.Regridder(infile, targetgrid, 'bilinear', reuse_weights=True)
+	regridder = xe.Regridder(infile, targetgrid, 'bilinear', reuse_weights=True, filename=variablename+'regridder.nc')
 
 	Path(outputfolder).mkdir(parents=True, exist_ok=True)
 
