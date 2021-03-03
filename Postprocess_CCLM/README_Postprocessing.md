@@ -17,7 +17,7 @@ Modify the initial conditions of CCLM. See docstring for more information. Can b
 
 **3. lbfd_adapt.py**
 
-Modify the boundary conditions of one CCLM simulation year. See docstring in python file for more information on input. This takes a longer time to run and using a cluster is recommended (see next step).
+Modify the boundary conditions of one CCLM simulation year. See docstring in python file for more information on input. This takes a longer time to run and using a cluster is recommended. [master.py](/Postprocess_CCLM/master.py) can be used to create a batch job submission script for the slrum system.
 
 **4. add_year_end.py**
 Can be used to add a folder with a couple of boundary condition files at the intended end of the simulation time. Some versions of CCLM crash if no boundary files for the 2-3 timesteps after the end of the simulation are present (normally not very important). 
