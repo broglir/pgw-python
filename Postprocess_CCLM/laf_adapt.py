@@ -4,20 +4,36 @@ from pathlib import Path
 import numpy as np
 import os
 """
-Can be used to add the calculated difference in all necessary variables to the initial condition (laf) file. This very fast, just run it in the console.
+Can be used to add the calculated difference in all necessary variables to the initial condition (laf) file.
+This very fast, just run it in the console.
 It requires the difference in relative humidity to adapt the specific humidity!
 
 Input:
-	lafpath: Path to the original laf-file from the "base" simulation (e.g. reanalysis driven or historical simulation). The name of the laf file must be as outputted by int2lm (e.g. laf1970010100.nc ).
+	lafpath: Path to the original laf-file from the "base" simulation
+	(e.g. reanalysis driven or historical simulation). The name of the laf file
+	must be as outputted by int2lm (e.g. laf1970010100.nc ).
+
 	newyear: What year to use in the files (change it to the future to adapt CO2 levels)
-	laftimestep: Which timestep within the annual cycle is apropriate to adapt the laf file? (0 for beginning of year)
-	newtimestring: What timestamp should be used for the adapted laf file? Put the exact time of the new laf file in the format 'seconds since yyyy-mm-dd hh:mm:ss'
-	outputpath: In which folder should the adapted laf file be put (probably the same as the adapted boudary or lbfd files). Will be created if nonexistent.
-	Diffspath: Where is the input located, i.e. the single files that have been previously produced by the interpolate.py routie or the regridding routines. These are the files called for example T00000.nc
-	vcflat: Altitude where the vertical coordinate levels in CCLM become flat (this can be found in runscripts or YUSPECIF). We assume a Gal-Chen vertical coordinate here.
-	terrainpath: Path to a netcdf file containing the height of the terrain in the cosmo domain (could be a constant file such as lffd1969120100c.nc)
-	height_flat: Array of the geometrical altitude of all model levels in the cclm doman (can be found e.g. in YUSPECIF file). One value for each vertical level (this means there should normally be no level 0)!
-	height_flat can be automatically read from a height.txt file where the values from YUSPECIF are pasted (see example in repository).
+
+	laftimestep: Which timestep within the annual cycle is apropriate to adapt
+	the laf file? (0 for beginning of year; otherwise dayofyear*timesteps_per_day)
+
+	newtimestring: What timestamp should be used for the adapted laf file?
+	Put the exact time of the new laf file in the format 'seconds since yyyy-mm-dd hh:mm:ss'
+
+	outputpath: In which folder should the adapted laf file be put (
+	probably the same as the adapted boudary or lbfd files). Will be created if nonexistent.
+
+	Diffspath: Where is the input located, i.e. the single files that have been
+	reviously produced by the interpolate.py routie or the regridding routines.
+	These are the files called for example T00000.nc
+
+	terrainpath: Path to a netcdf file containing the height of the terrain in
+	the cosmo domain (could be a constant file such as lffd1969120100c.nc)
+
+	recompute_pressure: Boolean to indicate whether the pressure of the boundary
+	files should be recomputed based on temperature changes (not necessary if a
+	difference file for PP already exists (e.g. from previous cosmo simulation).
 
 Output:
 	The adapted laf file will be written to the chosen location and should directly be usable for CCLM.
@@ -28,13 +44,9 @@ newyear = 2070
 newtimestring = f'seconds since {newyear}-01-01 00:00:00'
 outputpath = ''
 Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
-vcflat=11430.
 terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
-height_flat=np.asanyarray([22700.0, 20800.0000, 19100.0, 17550.0, 16150.0, 14900.0,
-13800.0, 12785.0, 11875.0, 11020.0, 10205.0, 9440.0, 8710.0, 8015.0, 7355.0,
-6725.0, 6130.0, 5565.0, 5035.0, 4530.0, 4060.0, 3615.0, 3200.0, 2815.0, 2455.0,
-2125.0, 1820.0, 1545.0, 1295.0, 1070.0, 870.0, 695.0, 542.0, 412.0, 303.0, 214.0, 143.0, 89.0, 49.0, 20.0])
 laftimestep = 0
+recompute_pressure = False
 
 if len(sys.argv)>5:
 	lafpath=str(sys.argv[1])
@@ -44,15 +56,10 @@ if len(sys.argv)>5:
 	Diffspath=str(sys.argv[4])
 	terrainpath=str(sys.argv[5])
 	laftimestep=int(sys.argv[7])
-	vcflat=float(sys.argv[8])
+	recompute_pressure=bool(sys.argv[8])
 
-if os.path.exists('heights.txt') or os.path.exists('../heights.txt'):
-	try:
-		height_flat=np.genfromtxt('heights.txt',skip_header=1)[:-1,1]
-	except:
-		height_flat=np.genfromtxt('../heights.txt',skip_header=1)[:-1,1]
-
-
+height_flat = xr.open_dataset(lafpath).vcoord[:-1] #no 0 level (only for staggered grid)
+vcflat=xr.open_dataset(lafpath).vcoord.vcflat
 
 #get reference pressure function
 def getpref(vcflat, terrainpath, height_flat):
@@ -65,24 +72,21 @@ def getpref(vcflat, terrainpath, height_flat):
 	#the height at which the reference pressure needs to be computed needs to be derived form the terrain   following coordinates:
 	newheights = np.zeros((len(height_flat), hsurf.shape[0], hsurf.shape[1]))
 
-	#add the surface height but respect the terrain following coordinates
-	for x in range(hsurf.shape[0]):
-		for y in range(hsurf.shape[1]):
-			newheights[:,x,y] =  height_flat + hsurf[x,y].values * smoothing
-
+	#avoid forloop
+	newheights = height_flat.values[:,None,None] + hsurf.values[None,:,:] * smoothing[:,None,None]
 
 	#New formulation as researched by Christian Steger (untested)
 	# Constants
-	p0sl = 100000.0 # sea-level pressure [Pa]
-	t0sl = 288.15   # sea-level temperature [K]
+	p0sl = height_flat.p0sl # sea-level pressure [Pa]
+	t0sl = height_flat.t0sl   # sea-level temperature [K]
 	# Source: COSMO description Part I, page 29
 	g = 9.80665     # gravitational acceleration [m s-2]
 	R_d = 287.05    # gas constant for dry air [J K-1 kg-1]
 	# Source: COSMO source code, data_constants.f90
 
 	# irefatm = 2
-	delta_t = 75.0
-	h_scal = 10000.0
+	delta_t = height_flat.delta_t
+	h_scal = height_flat.h_scal
 	# Source: COSMO description Part VII, page 66
 	t00 = t0sl - delta_t
 
@@ -93,11 +97,11 @@ def getpref(vcflat, terrainpath, height_flat):
                    np.log((np.exp(hsurf.data / h_scal) * t00 + delta_t) / \
                           (t00 + delta_t)) )
 
-	return pref, pref_sfc
+	return pref, pref_sfc, newheights
 
 
 
-def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring, pref, pref_sfc):
+def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring, pref, pref_sfc, height_array, recompute_pressure):
 
 	laffile = xr.open_dataset(lafpath, decode_cf=False)
 
@@ -119,10 +123,54 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 		return RH, RH_S
 
 
-
 	def diffadd(var, laffile=laffile):
 		Diff = xr.open_dataset(f'{Diffspath}/{var}{laftimestep:05d}.nc')[var]
 		laffile[var].data = laffile[var].data + Diff.data.astype('float32')
+
+
+	def pressure_recompute(laf_file, pref, height_array):
+		#function to compute pressure field in a differen climate using the barometric
+		#formula (maintaining hydrostatic balance)
+		#temperature changes
+		dT_sfc = xr.open_dataset(f'{Diffspath}/T_S{laftimestep:05d}.nc')['T_S']
+		dT_atmos = xr.open_dataset(f'{Diffspath}/T{laftimestep:05d}.nc')['T']
+
+		#get pressure field
+		pressure_original = laffile['PP'] + pref
+		pressure_new = pressure_original.copy()
+
+		#get height difference between model levels
+		dz = height_array[:-1] - height_array[1:]
+
+		temperature = laffile['T']
+		sfc_temperature = laffile['T_S']
+
+		#define barometric height formula
+		def barometric(reference_pressure, reference_temperature, dz, lapse_rate):
+			R = 8.3144598 #universal gas constant
+			M = 0.0289644 # molar mass of air #standard lapse rate
+			g = 9.80665
+			#lapse_rate = - 0.0065
+			exo = - g * M / (R * lapse_rate) #exponent in barometric formula
+
+			pressure = reference_pressure * ( (reference_temperature + (lapse_rate * dz))
+			/ reference_temperature )**exo
+
+			return pressure
+
+		#compute surface pressure
+		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -20, 0.0065)
+
+		#get the lowest model level in warmer climate
+		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, 20, -0.0065)
+		#get the rest
+		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
+		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
+
+		#convert to PP
+		laffile['PP'] = pressure_new - pref
+
+		return laffile
 
 
     #compute new humidity funcion once temperature and pressure were changed
@@ -150,8 +198,13 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 	#get relative humidity in old laf
 	RH_old, RH_S_old = comprelhums(laffile, pref, pref_sfc)
 
+	if recompute_pressure:
+		laffile = pressure_recompute(laffile, pref, height_array)
+		variables = ['T', 'T_S', 'U', 'V']
+	else:
+		variables = ['T', 'T_S', 'U', 'V', 'PP']
+
 	#change other variables
-	variables = ['T', 'T_S', 'U', 'V']
 	for var in variables:
 		diffadd(var, laffile)
 
@@ -165,6 +218,8 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 
 	laffile.to_netcdf(f'{outputpath}/laf{newyear}{endpartlaf}', mode='w')
 	laffile.close()
+	print(f'saved {outputpath}/laf{newyear}{endpartlaf}')
 
-pref, pref_sfc = getpref(vcflat, terrainpath, height_flat)
-lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring, pref, pref_sfc)
+pref, pref_sfc, height_array = getpref(vcflat, terrainpath, height_flat)
+lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring,
+pref, pref_sfc, height_array, recompute_pressure)

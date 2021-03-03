@@ -6,26 +6,43 @@ from pathlib import Path
 import numpy as np
 
 """
-Add the calculated difference in all necessary variables to the boundary condition (lbfd) files for one year. This should be run on a cluster. This script will only work when data for all year is present!
+Add the calculated difference in all necessary variables to the boundary condition (lbfd) files for one year.
+This should be run on a cluster.
 
 Input:
-	year (comandline argument): The year for which the boundary files should be adapted. The year refers to the year in the original output from int2lm.
-	lbfdpath: path to directory where boundary files are saved
-	changeyears: amount of years to be added to timestamp of data
-	outputpath: path to put the adapted bondary files
-	Diffspath: Where to find the changes (climate change deltas) to add to the boundary files. This is the ouput of earlier scripts in this repository (i.e. T00000.nc, T00001.nc etc.).
-	difftimesteps: Amount of timesteps (or boundary data fields) in one year
-    vcflat: Altitude where the vertical coordinate levels in CCLM become flat (this can be found in runscripts or YUSPECIF). We assume a Gal-Chen vertical coordinate here.is needed for the adaptation of humidity.
-    terrainpath: Path to a netcdf file containing the height of the terrain in the cosmo domain (could be a constant file such as lffd1969120100c.nc)
-    height_flat: Array of the geometrical altitude of all model levels in the cclm doman (can be found e.g. in YUSPECIF file). One value for each vertical level (this means there should normally be no level 0)!
+	year (comandline argument): The year for which the boundary files should be adapted.
+	The year refers to the year in the original output from int2lm.
 
+	lbfdpath: path to directory where boundary files are saved
+
+	changeyears: amount of years to be added to timestamp of data (shift to future)
+
+	outputpath: path to put the modifiyed bondary files
+
+	Diffspath: Where to find the changes (climate change deltas) to add to the boundary files.
+	This is the ouput of earlier scripts in this repository (i.e. T00000.nc, T00001.nc etc.).
+
+	difftimesteps: Amount of timesteps (or boundary data fields) in one year
+	(extrapolate to an entire year even if only a fraction is needed; this depends on the calendar used)
+
+    terrainpath: Path to a netcdf file containing the height of the terrain in
+	the cosmo domain (could be a constant file such as lffd1969120100c.nc)
+
+	starttimestep: The files as produced from previous scripts start in january
+	and run through the year. If your PGW simulation does not start in january,
+	you have to compute the timestep of the start (dayofyear * timesteps_per_day)
+
+	recompute_pressure: Boolean to indicate whether the pressure of the boundary
+	files should be recomputed based on temperature changes (not necessary if a
+	difference file for PP already exists (e.g. from previous cosmo simulation).
 
 Output:
-	For every boundary file in the inputdata, a corresponding output field will be written to the path specified as outputpath.
+	For every boundary file in the inputdata, a corresponding output field will
+	be written to the path specified as outputpath.
 """
 
 year = int(sys.argv[1])
-#The year (in original data) which should be processed should be passed as command line argument
+
 lbfdpath = f'/scratch/snx3000/robro/int2lm/HadGEM/driving_historical/{year}/'
 
 changeyears = 88
@@ -34,22 +51,12 @@ outputpath = f'/scratch/snx3000/robro/int2lm/HadGEM/PGW_TEST/{newyear}/'
 
 Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
 difftimesteps = 366 * 4
-#the files as produced from previous scripts start in january and run through the year
-#if your PGW simulation does not start in january,
-#you have to compute the timestep of the start and add it below
-starttimestep = 304 * 4
 
-#options for adaptation of humidity
-vcflat=11430.
+starttimestep = 0
+
 terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
 
-height_flat=np.asanyarray([22700.0, 20800.0000, 19100.0, 17550.0, 16150.0,
-14900.0, 13800.0, 12785.0, 11875.0, 11020.0, 10205.0,
-9440.0, 8710.0, 8015.0, 7355.0, 6725.0, 6130.0, 5565.0, 5035.0, 4530.0, 4060.0,
-3615.0, 3200.0, 2815.0, 2455.0, 2125.0, 1820.0, 1545.0, 1295.0, 1070.0, 870.0,
-695.0, 542.0, 412.0, 303.0, 214.0, 143.0, 89.0, 49.0, 20.0])
-
-
+#if submitted by master.py
 if len(sys.argv)>5:
 	year=int(sys.argv[1])
 	lbfdpath=str(sys.argv[2])
@@ -59,15 +66,15 @@ if len(sys.argv)>5:
 	starttimestep=int(sys.argv[6])
 	difftimesteps=int(sys.argv[7])
 	changeyears=int(sys.argv[8])
-	vcflat=float(sys.argv[9])
+	recompute_pressure=bool(sys.argv[9])
 	newyear = year + changeyears
 
 
-if os.path.exists('heights.txt') or os.path.exists('../heights.txt'):
-	try:
-		height_flat=np.genfromtxt('heights.txt',skip_header=1)[:-1,1]
-	except:
-		height_flat=np.genfromtxt('../heights.txt',skip_header=1)[:-1,1]
+#read height coordinate from file
+os.chdir(lbfdpath)
+files = glob.glob('lbfd??????????.nc')
+height_flat = xr.open_dataset(files[0]).vcoord[:-1]
+vcflat=xr.open_dataset(files[0]).vcoord.vcflat
 
 
 #get reference pressure function
@@ -81,23 +88,21 @@ def getpref(vcflat, terrainpath, height_flat):
 	#the height at which the reference pressure needs to be computed needs to be derived form the terrain   following coordinates:
 	newheights = np.zeros((len(height_flat), hsurf.shape[0], hsurf.shape[1]))
 
-	#add the surface height but respect the terrain following coordinates
-	for x in range(hsurf.shape[0]):
-		for y in range(hsurf.shape[1]):
-			newheights[:,x,y] =  height_flat + hsurf[x,y].values * smoothing
+	#avoid forloop
+	newheights = height_flat.values[:,None,None] + hsurf.values[None,:,:] * smoothing[:,None,None]
 
-	#New formulation as researched by Christian Steger
+	#New formulation as researched by Christian Steger (untested)
 	# Constants
-	p0sl = 100000.0 # sea-level pressure [Pa]
-	t0sl = 288.15   # sea-level temperature [K]
+	p0sl = height_flat.p0sl # sea-level pressure [Pa]
+	t0sl = height_flat.t0sl   # sea-level temperature [K]
 	# Source: COSMO description Part I, page 29
 	g = 9.80665     # gravitational acceleration [m s-2]
 	R_d = 287.05    # gas constant for dry air [J K-1 kg-1]
 	# Source: COSMO source code, data_constants.f90
 
 	# irefatm = 2
-	delta_t = 75.0
-	h_scal = 10000.0
+	delta_t = height_flat.delta_t
+	h_scal = height_flat.h_scal
 	# Source: COSMO description Part VII, page 66
 	t00 = t0sl - delta_t
 
@@ -108,11 +113,12 @@ def getpref(vcflat, terrainpath, height_flat):
                    np.log((np.exp(hsurf.data / h_scal) * t00 + delta_t) / \
                           (t00 + delta_t)) )
 
-	return pref, pref_sfc
+	return pref, pref_sfc, newheights
+
 
 
 #function to adapt all lbfd files:
-def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref, pref_sfc):
+def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref, pref_sfc, dz, recompute_pressure):
 
 	#function to add all variables but humidity to the boundary field (use given timestep)
 	def diffadd(var, num, lbfd):
@@ -133,6 +139,48 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		RH_S = 0.263 * p_sfc * QV_S *(np.exp(17.67*(T_S - 273.15)/(T_S-29.65)))**(-1)
 
 		return RH, RH_S
+
+
+	def pressure_recompute(lbfd, num, pref, dz):
+		#function to compute pressure field in a differen climate using the barometric
+		#formula (maintaining hydrostatic balance)
+		#temperature changes
+		dT_sfc = xr.open_dataset(f'{Diffspath}/T_S{num:05d}.nc')['T_S']
+		dT_atmos = xr.open_dataset(f'{Diffspath}/T{num:05d}.nc')['T']
+
+		#get pressure field
+		pressure_original = lbfd['PP'] + pref
+		pressure_new = pressure_original.copy()
+
+		temperature = lbfd['T']
+		sfc_temperature = lbfd['T_S']
+
+		#define barometric height formula
+		def barometric(reference_pressure, reference_temperature, dz, lapse_rate):
+			R = 8.3144598 #universal gas constant
+			M = 0.0289644 # molar mass of air #standard lapse rate
+			g = 9.80665
+			#lapse_rate = - 0.0065
+			exo = - g * M / (R * lapse_rate) #exponent in barometric formula
+
+			pressure = reference_pressure * ( (reference_temperature + (lapse_rate * dz))
+			/ reference_temperature )**exo
+
+			return pressure
+
+		#compute surface pressure
+		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -20, 0.0065)
+
+		#get the lowest model level in warmer climate
+		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, 20, -0.0065)
+		#get the rest
+		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
+		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
+
+		#convert to PP
+		lbfd['PP'] = pressure_new - pref
+
+		return lbfd
 
 
 	#compute new humidity funcion once temperature and pressure were changed
@@ -175,14 +223,17 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		lbfd = xr.open_dataset(lbfdnum, decode_cf=False)
 
 		#at the end of year reset the timestep counter
-		if num >= difftimesteps:
+		if num >= difftimesteps - 1:
 			num = 0
-
 
 		#run the defined functions and change filename & time:
 		RH_old, RH_S_old = comprelhums(lbfd, pref, pref_sfc)
 
-		variables = ['T', 'T_S', 'U', 'V']
+		if recompute_pressure:
+			lbfd = pressure_recompute(lbfd, num, pref, dz)
+			variables = ['T', 'T_S', 'U', 'V']
+		else:
+			variables = ['T', 'T_S', 'U', 'V', 'PP']
 
 		for var in variables:
 			diffadd(var, num, lbfd)
@@ -202,5 +253,7 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		lbfd.close()
 		num = num + 1
 
-pref, pref_sfc = getpref(vcflat, terrainpath, height_flat)
-lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref, pref_sfc)
+pref, pref_sfc, height_array = getpref(vcflat, terrainpath, height_flat)
+dz = height_array[:-1] - height_array[1:] #get height difference between model levels
+lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
+pref_sfc, dz, recompute_pressure)
