@@ -177,8 +177,9 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
 		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
 
+		new_pp = pressure_new.data - pref
 		#convert to PP
-		lbfd['PP'] = pressure_new - pref
+		lbfd['PP'].data = new_pp.astype('float32')
 
 		return lbfd
 
@@ -229,7 +230,7 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		#run the defined functions and change filename & time:
 		RH_old, RH_S_old = comprelhums(lbfd, pref, pref_sfc)
 
-		if recompute_pressure:
+		if recompute_pressure == True:
 			lbfd = pressure_recompute(lbfd, num, pref, dz)
 			variables = ['T', 'T_S', 'U', 'V']
 		else:

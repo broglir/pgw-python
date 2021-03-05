@@ -65,7 +65,7 @@ if execute_rename:
 		a=os.system(cmd)
 
 
-execute_adapt_laf=1
+execute_adapt_laf=0
 
 if execute_adapt_laf:
 	print('Executing addition of signal to laf file')
@@ -73,7 +73,7 @@ if execute_adapt_laf:
 	print(cmd)
 	a=os.system(cmd)
 
-execute_lbfd=0
+execute_lbfd=1
 
 if execute_lbfd:
 	print('Executing addition of signal to lbfd files')

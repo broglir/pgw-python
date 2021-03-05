@@ -167,8 +167,9 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
 		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
 
+		new_pp = pressure_new.data - pref
 		#convert to PP
-		laffile['PP'] = pressure_new - pref
+		laffile['PP'].data = new_pp.astype('float32')
 
 		return laffile
 
@@ -198,11 +199,11 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 	#get relative humidity in old laf
 	RH_old, RH_S_old = comprelhums(laffile, pref, pref_sfc)
 
-	if recompute_pressure:
+	if recompute_pressure == True:
 		laffile = pressure_recompute(laffile, pref, height_array)
 		variables = ['T', 'T_S', 'U', 'V']
 	else:
-		variables = ['T', 'T_S', 'U', 'V', 'PP']
+		variables = ['T', 'T_S', 'U', 'V' ,'PP']
 
 	#change other variables
 	for var in variables:
