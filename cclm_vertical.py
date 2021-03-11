@@ -15,11 +15,18 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 	"""
 
 	if os.path.exists('heights.txt'):
+		#YUSPECIF gives height of half-levels (levels1; one more level than full)
+		hlevels_flat_half=np.genfromtxt('heights.txt',skip_header=1)[:,1]
+		plevels_cclm_half=np.genfromtxt('heights.txt',skip_header=1)[:,2]
 
-		hlevels_flat=np.genfromtxt('heights.txt',skip_header=1)[:-1,1]
-		plevels_cclm=np.genfromtxt('heights.txt',skip_header=1)[:-1,2]
-		#Warnign!! the last value is deleted as it correspond to the surface.
-		# If deleted in the heights.txt file, delete the "-1" in the above lines
+		hlevels_flat=np.zeros(len(hlevels_flat_half.shape[0]-1))
+		plevels_cclm=np.zeros(len(hlevels_flat_half.shape[0]-1))
+
+		hlevels_flat = hlevels_flat_half[1:] + \
+		(0.5 * (hlevels_flat_half[:-1] - hlevels_flat_half[1:]) )
+		plevels_cclm = plevels_cclm_half[1:] + \
+		(0.5 * (plevels_cclm_half[:-1] - plevels_cclm_half[1:]) )
+
 		plevels_cclm = plevels_cclm * 100. #convert to pascal
 	else:#use default levels
 		print('Using default levels')

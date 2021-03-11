@@ -73,9 +73,13 @@ if len(sys.argv)>5:
 #read height coordinate from file
 os.chdir(lbfdpath)
 files = glob.glob('lbfd??????????.nc')
+height_flat_half = xr.open_dataset(files[0]).vcoord #these are half levels
 height_flat = xr.open_dataset(files[0]).vcoord[:-1]
 vcflat=xr.open_dataset(files[0]).vcoord.vcflat
 
+#get the full level height
+height_flat.data = height_flat_half.data[1:] + \
+(0.5 * (height_flat_half.data[:-1] - height_flat_half.data[1:]) )
 
 #get reference pressure function
 def getpref(vcflat, terrainpath, height_flat):

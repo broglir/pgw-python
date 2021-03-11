@@ -58,8 +58,13 @@ if len(sys.argv)>5:
 	laftimestep=int(sys.argv[7])
 	recompute_pressure=bool(sys.argv[8])
 
-height_flat = xr.open_dataset(lafpath).vcoord[:-1] #no 0 level (only for staggered grid)
+height_flat_half = xr.open_dataset(lafpath).vcoord #these are half levels
+height_flat = xr.open_dataset(lafpath).vcoord[:-1] #to fill with full levels
 vcflat=xr.open_dataset(lafpath).vcoord.vcflat
+
+#get the full level height
+height_flat.data = height_flat_half.data[1:] + \
+(0.5 * (height_flat_half.data[:-1] - height_flat_half.data[1:]) )
 
 #get reference pressure function
 def getpref(vcflat, terrainpath, height_flat):
@@ -153,8 +158,8 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 			#lapse_rate = - 0.0065
 			exo = - g * M / (R * lapse_rate) #exponent in barometric formula
 
-			pressure = reference_pressure * ( (reference_temperature + (lapse_rate * dz))
-			/ reference_temperature )**exo
+			pressure = reference_pressure * ( (reference_temperature + \
+			(lapse_rate * dz)) / reference_temperature )**exo
 
 			return pressure
 
