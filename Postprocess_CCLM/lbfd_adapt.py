@@ -145,7 +145,7 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		return RH, RH_S
 
 
-	def pressure_recompute(lbfd, num, pref, dz):
+	def pressure_recompute(lbfd, num, pref, dz, height_flat):
 		#function to compute pressure field in a differen climate using the barometric
 		#formula (maintaining hydrostatic balance)
 		#temperature changes
@@ -162,7 +162,7 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		#define barometric height formula
 		def barometric(reference_pressure, reference_temperature, dz, lapse_rate):
 			R = 8.3144598 #universal gas constant
-			M = 0.0289644 # molar mass of air #standard lapse rate
+			M = 0.0289644 # molar mass of air
 			g = 9.80665
 			#lapse_rate = - 0.0065
 			exo = - g * M / (R * lapse_rate) #exponent in barometric formula
@@ -173,13 +173,14 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 			return pressure
 
 		#compute surface pressure
-		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -20, 0.0065)
+		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -height_flat[-1], 0.0065)
 
 		#get the lowest model level in warmer climate
-		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, 20, -0.0065)
-		#get the rest
-		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
-		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
+		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, height_flat[-1], -0.0065)
+		#get the rest (loop from ground up)
+		for level in range(len(dz)-1, -1, -1):
+			pressure_new[:,level,:,:] = barometric(pressure_new[:,level+1,:,:], \
+			temperature[:,level+1,:,:]+dT_atmos[level+1,:,:], dz[level,:,:], -0.0065)
 
 		new_pp = pressure_new.data - pref
 		#convert to PP
@@ -235,7 +236,7 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		RH_old, RH_S_old = comprelhums(lbfd, pref, pref_sfc)
 
 		if recompute_pressure == True:
-			lbfd = pressure_recompute(lbfd, num, pref, dz)
+			lbfd = pressure_recompute(lbfd, num, pref, dz, height_flat)
 			variables = ['T', 'T_S', 'U', 'V']
 		else:
 			variables = ['T', 'T_S', 'U', 'V', 'PP']

@@ -133,7 +133,7 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 		laffile[var].data = laffile[var].data + Diff.data.astype('float32')
 
 
-	def pressure_recompute(laf_file, pref, height_array):
+	def pressure_recompute(laf_file, pref, height_array, height_flat):
 		#function to compute pressure field in a differen climate using the barometric
 		#formula (maintaining hydrostatic balance)
 		#temperature changes
@@ -164,13 +164,14 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 			return pressure
 
 		#compute surface pressure
-		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -20, 0.0065)
+		surface_press = barometric(pressure_original[:,-1,:,:], temperature[:,-1,:,:], -height_flat[-1], 0.0065)
 
 		#get the lowest model level in warmer climate
-		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, 20, -0.0065)
-		#get the rest
-		pressure_new[:,:-1,:,:] = barometric(pressure_original[:,1:,:,:],
-		temperature[:,1:,:,:]+dT_atmos[1:,:,:], dz, -0.0065)
+		pressure_new[:,-1,:,:] = barometric(surface_press, sfc_temperature+dT_sfc, height_flat[-1], -0.0065)
+		#get the rest (loop from ground up)
+		for level in range(len(dz)-1, -1, -1):
+			pressure_new[:,level,:,:] = barometric(pressure_new[:,level+1,:,:], \
+			temperature[:,level+1,:,:]+dT_atmos[level+1,:,:], dz[level,:,:], -0.0065)
 
 		new_pp = pressure_new.data - pref
 		#convert to PP
@@ -205,7 +206,7 @@ def lafadapt(lafpath, newyear, outputpath, Diffspath, laftimestep, newtimestring
 	RH_old, RH_S_old = comprelhums(laffile, pref, pref_sfc)
 
 	if recompute_pressure == True:
-		laffile = pressure_recompute(laffile, pref, height_array)
+		laffile = pressure_recompute(laffile, pref, height_array, height_flat)
 		variables = ['T', 'T_S', 'U', 'V']
 	else:
 		variables = ['T', 'T_S', 'U', 'V' ,'PP']

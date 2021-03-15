@@ -16,7 +16,7 @@ difference_files_path='/scratch/snx3000/robro/pgwtemp/final2/'
 
 constant_variables_file='/store/c2sm/ch4/robro/surrogate_input/lffd2005112000c.nc'
 
-output_path='/scratch/snx3000/robro/PGW_atl_04/output/ifs2lm_PP'
+output_path='/scratch/snx3000/robro/PGW_atl_04/output/ifs2lm_fixed'
 
 recompute_pressure=True
 
@@ -65,7 +65,7 @@ if execute_rename:
 		a=os.system(cmd)
 
 
-execute_adapt_laf=0
+execute_adapt_laf=1
 
 if execute_adapt_laf:
 	print('Executing addition of signal to laf file')
