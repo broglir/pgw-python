@@ -4,6 +4,10 @@ Software to modify lateral boundary conditions of regional climate simulations
 as described e.g. here https://iopscience.iop.org/article/10.1088/1748-9326/ab4438 or also
 here https://doi.org/10.1175/JCLI-D-18-0431.1
 
+## CSCS-users
+If you are a CSCS user the recommended way to use this software is to run the [master_notebook](./master_notebook.ipynb) on https://jupyter.cscs.ch/. That notebook contains it's own documentation.
+
+# General Documentation
 The structure of the repository is built as follows:
 
 The top level directory contains the central scripts to modify lateral boundary conditions of any regional climate model using imput from a global or regional climate model. 
@@ -22,7 +26,7 @@ To install the enviroment, just execute `conda env create -f environment.yml` on
 **Requeriments**
 
 Annual climate deltas from a global climate model in either daily or monthly steps.
-Climate deltas refer to the difference between the fields predicted by the climate model between two different time periods (usually future and present).
+Climate deltas refer to the difference between the fields predicted by the climate model between two different time periods (usually future and present). If climate model data in the CMOR format (e.g. CMIP simulations) will be used to force the PGW simulations there is a practical [documentation](/Documentations/README_CMOR.md) on which variables are needed.
 
 **Input On Daily Timescale**
 
@@ -66,3 +70,9 @@ frequency needed for the lateral boundaries (every timestep where a lateral boun
   **regrid_horizontal.py** -- Can be used to bring the input data to the output grid.
 
   **cclm_vertical.py** -- interpolates pressure level data to height-based model levels. This is very specific to the regional climate model COSMO-CCLM and can only be used for inspiration for other models. This is also a very compute intensive script and should be run on a cluster.
+  
+
+# References
+To acknowledge this software cite one of the following articles: 
+1. Brogli, R., Kröner, N., Sørland, S. L., Lüthi, D., & Schär, C. (2019). The Role of Hadley Circulation and Lapse-Rate Changes for the Future European Summer Climate. Journal of Climate, 32, 385–404. https://doi.org/10.1175/JCLI-D-18-0431.1
+1. Brogli, R., Sørland, S. L., Kröner, N., & Schär, C. (2019). Causes of future Mediterranean precipitation decline depend on the season. Environmental Research Letters, 14, 114017. https://doi.org/10.1088/1748-9326/ab4438

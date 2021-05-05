@@ -16,7 +16,7 @@ if len(sys.argv[:])>4:
 	#Reading paths from command line
 	oldpath=str(sys.argv[3])
 	newpath=str(sys.argv[4])
-	outputtimesteps=str(sys.argv[5])
+	outputtimesteps=int(sys.argv[5])
 
 for i in range(outputtimesteps):
 	old = xr.open_dataset(f"{oldpath}/{variable}{i:05d}.nc")

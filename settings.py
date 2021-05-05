@@ -34,24 +34,27 @@ if performsmooth == True:
 		print(commandsmooth)
     
 
-performinterp = False
+performinterp = True
 if performinterp == True:
 	#see documentation in interpolate.py
-	samepath='/scratch/snx3000/robro/pgwtemp/'
+	samepath='/scratch/snx3000/robro/pgwtemp/deltas/GCMdata/'
 	
-	filepathint = [
-	samepath+'diff_hur.nc',
-	samepath+'diff_hurs.nc',
-	samepath+'diff_ta.nc',
-	samepath+'diff_tas.nc',
-	samepath+'diff_ua.nc',
-	samepath+'diff_va.nc',
-	]
-	variablename = ['hur', 'hurs', 'ta', 'tas', 'ua', 'va']
+	#filepathint = [
+	#samepath+'diff_hur.nc',
+	#samepath+'diff_hurs.nc',
+	#samepath+'diff_ta.nc',
+	#samepath+'diff_tas.nc',
+	#samepath+'diff_ua.nc',
+	#samepath+'diff_va.nc',
+	#]
+	#variablename = ['hur', 'hurs', 'ta', 'tas', 'ua', 'va']
 	
+	filepathint = [samepath+'diff_tas.nc']
+	variablename = ['tas']
+
 	outputtimesteps = 366 * 4
 	inputfreq = 'month'
-	outputpath_int = '/scratch/snx3000/robro/pgwtemp/interpolated/'
+	outputpath_int = '/scratch/snx3000/robro/pgwtemp/interpolated_2/'
     
 	for numi,pathin in enumerate(filepathint):  
 		commandint = f"python interpolate.py {pathin} {variablename[numi]} {outputtimesteps} {inputfreq} {outputpath_int}"
@@ -74,29 +77,6 @@ if regridhori == True:
 		#get the python command and write a file to submit to the piz daint machine
 		comandreghor = f"python regrid_horizontal.py {infolder} {variable} {inputtimesteps} {outputgridfile} {outputfolder} > out_regrid.txt &" 
 		subprocess.run(comandreghor, shell=True)
-		
-	
-	## for efficient parallelization one can run this function also in jupyterlab at cscs if a kernel with all pyton modules is available
-	## first in the console run seperately
-	## from dask.distributed import Client
-	## client = Client(n_workers=6) #one worker per variable
-	
-	##uncomment the following and run settings.py after the client is initialized
-	#from regrid_horizontal import regridhorizontal
-	#from distributed.diagnostics.plugin import UploadFile
-	#from dask import delayed
-	#import os
-	#import dask
-	#tasks=[]
-	#wordir=os.getcwd()
-	
-	#for variable in variablename:
-		#temp = delayed(regridhorizontal)(infolder, variable, inputtimesteps, outputgridfile, outputfolder)
-		#tasks.append(temp)
-	
-	##run this in console after settings.py
-	#client.register_worker_plugin(UploadFile(wordir+"/regrid_horizontal.py")) 
-	#err = dask.compute(*tasks) #this will distribute the computation to the workers
 
 
 

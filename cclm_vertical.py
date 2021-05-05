@@ -19,8 +19,8 @@ def vertinterpol(terrainpath, datapath, variablename, outvar, outputpath, vcflat
 		hlevels_flat_half=np.genfromtxt('heights.txt',skip_header=1)[:,1]
 		plevels_cclm_half=np.genfromtxt('heights.txt',skip_header=1)[:,2]
 
-		hlevels_flat=np.zeros(len(hlevels_flat_half.shape[0]-1))
-		plevels_cclm=np.zeros(len(hlevels_flat_half.shape[0]-1))
+		hlevels_flat=np.zeros(hlevels_flat_half.shape[0]-1)
+		plevels_cclm=np.zeros(hlevels_flat_half.shape[0]-1)
 
 		hlevels_flat = hlevels_flat_half[1:] + \
 		(0.5 * (hlevels_flat_half[:-1] - hlevels_flat_half[1:]) )

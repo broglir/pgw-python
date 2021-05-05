@@ -41,45 +41,6 @@ Output:
 	be written to the path specified as outputpath.
 """
 
-year = int(sys.argv[1])
-
-lbfdpath = f'/scratch/snx3000/robro/int2lm/HadGEM/driving_historical/{year}/'
-
-changeyears = 88
-newyear = year + changeyears
-outputpath = f'/scratch/snx3000/robro/int2lm/HadGEM/PGW_TEST/{newyear}/'
-
-Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
-difftimesteps = 366 * 4
-
-starttimestep = 0
-
-terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
-
-#if submitted by master.py
-if len(sys.argv)>5:
-	year=int(sys.argv[1])
-	lbfdpath=str(sys.argv[2])
-	outputpath=str(sys.argv[3])
-	Diffspath=str(sys.argv[4])
-	terrainpath=str(sys.argv[5])
-	starttimestep=int(sys.argv[6])
-	difftimesteps=int(sys.argv[7])
-	changeyears=int(sys.argv[8])
-	recompute_pressure=bool(sys.argv[9])
-	newyear = year + changeyears
-
-
-#read height coordinate from file
-os.chdir(lbfdpath)
-files = glob.glob('lbfd??????????.nc')
-height_flat_half = xr.open_dataset(files[0]).vcoord #these are half levels
-height_flat = xr.open_dataset(files[0]).vcoord[:-1]
-vcflat=xr.open_dataset(files[0]).vcoord.vcflat
-
-#get the full level height
-height_flat.data = height_flat_half.data[1:] + \
-(0.5 * (height_flat_half.data[:-1] - height_flat_half.data[1:]) )
 
 #get reference pressure function
 def getpref(vcflat, terrainpath, height_flat):
@@ -122,7 +83,7 @@ def getpref(vcflat, terrainpath, height_flat):
 
 
 #function to adapt all lbfd files:
-def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref, pref_sfc, dz, recompute_pressure):
+def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref, pref_sfc, dz, recompute_pressure, starttimestep, height_flat):
 
 	#function to add all variables but humidity to the boundary field (use given timestep)
 	def diffadd(var, num, lbfd):
@@ -258,8 +219,52 @@ def lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
 		lbfd.to_netcdf(f'{outputpath}/lbfd{lbfdyear}{endpart}', mode='w')
 		lbfd.close()
 		num = num + 1
+		
+def workflow_lbfd(year, lbfdpath, outputpath, Diffspath, terrainpath, starttimestep, difftimesteps, changeyears, recompute_pressure):
+	
+	#read height coordinate from file
+	os.chdir(lbfdpath)
+	files = glob.glob('lbfd??????????.nc')
+	height_flat_half = xr.open_dataset(files[0]).vcoord #these are half levels
+	height_flat = xr.open_dataset(files[0]).vcoord[:-1]
+	vcflat=xr.open_dataset(files[0]).vcoord.vcflat
 
-pref, pref_sfc, height_array = getpref(vcflat, terrainpath, height_flat)
-dz = height_array[:-1] - height_array[1:] #get height difference between model levels
-lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
-pref_sfc, dz, recompute_pressure)
+	#get the full level height
+	height_flat.data = height_flat_half.data[1:] + \
+	(0.5 * (height_flat_half.data[:-1] - height_flat_half.data[1:]) )
+	
+	pref, pref_sfc, height_array = getpref(vcflat, terrainpath, height_flat)
+	dz = height_array[:-1] - height_array[1:] #get height difference between model levels
+	lbfdadapt(lbfdpath, outputpath, Diffspath, difftimesteps, changeyears, pref,
+	pref_sfc, dz, recompute_pressure, starttimestep, height_flat)
+
+	
+if __name__ == "__main__":
+	year = int(sys.argv[1]) # if script is run by its own
+
+	lbfdpath = f'/scratch/snx3000/robro/int2lm/HadGEM/driving_historical/{year}/'
+
+	changeyears = 88
+	newyear = year + changeyears
+	outputpath = f'/scratch/snx3000/robro/int2lm/HadGEM/PGW_TEST/{newyear}/'
+
+	Diffspath = '/scratch/snx3000/robro/pgwtemp/interpolated/'
+	difftimesteps = 366 * 4
+
+	starttimestep = 0
+
+	terrainpath='/store/c2sm/ch4/robro/surrogate_input/lffd1969120100c.nc'
+
+	#if submitted by master.py
+	if len(sys.argv)>5:
+		year=int(sys.argv[1])
+		lbfdpath=str(sys.argv[2])
+		outputpath=str(sys.argv[3])
+		Diffspath=str(sys.argv[4])
+		terrainpath=str(sys.argv[5])
+		starttimestep=int(sys.argv[6])
+		difftimesteps=int(sys.argv[7])
+		changeyears=int(sys.argv[8])
+		recompute_pressure=bool(sys.argv[9])
+
+	workflow_lbfd(year, lbfdpath, outputpath, Diffspath, terrainpath, starttimestep, difftimesteps, changeyears, recompute_pressure)

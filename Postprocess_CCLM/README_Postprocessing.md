@@ -4,6 +4,8 @@ This directory includes python scripts to modify the boundary conditions of the 
 
 If desired, the scripts can be run from the directory's master file [master.py](/Postprocess_CCLM/master.py).
 
+If CSCS users use the [master_notebook.ipynb](/master_notebook.ipynb) jupyter notebook, this workflow is already integrated.
+
 # Typical workflow
 
 **1. rename_variables.py**

@@ -16,7 +16,7 @@ difference_files_path='/scratch/snx3000/robro/pgwtemp/final2/'
 
 constant_variables_file='/store/c2sm/ch4/robro/surrogate_input/lffd2005112000c.nc'
 
-output_path='/scratch/snx3000/robro/PGW_atl_04/output/ifs2lm_fixed'
+output_path='/scratch/snx3000/robro/PGW_atl_04/output/ifs2lm'
 
 recompute_pressure=True
 
@@ -81,7 +81,7 @@ if execute_lbfd:
 	for yyyy in range(st_year, end_year + 1):
 		newyear = yyyy + changeyears
 
-		if end_year - st_year > 0: # if one wants to sumbit multiple jobs for different years, files should be groupt in folders for the year
+		if end_year - st_year > 0: # if one wants to sumbit multiple jobs for different years, files should be grouped in folders for the year
 			output_path = f'{output_path}/{newyear}/'
 			lbfds_files_path = f'{lbfds_files_path}/{yyyy}/'
 
