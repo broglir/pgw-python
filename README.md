@@ -73,6 +73,7 @@ frequency needed for the lateral boundaries (every timestep where a lateral boun
   
 
 # References
-To acknowledge this software cite one of the following articles: 
+To acknowledge this software cite one of the following articles and/or doi: 
+[![DOI](https://zenodo.org/badge/233851849.svg)](https://zenodo.org/badge/latestdoi/233851849)
 1. Brogli, R., Kröner, N., Sørland, S. L., Lüthi, D., & Schär, C. (2019). The Role of Hadley Circulation and Lapse-Rate Changes for the Future European Summer Climate. Journal of Climate, 32, 385–404. https://doi.org/10.1175/JCLI-D-18-0431.1
 1. Brogli, R., Sørland, S. L., Kröner, N., & Schär, C. (2019). Causes of future Mediterranean precipitation decline depend on the season. Environmental Research Letters, 14, 114017. https://doi.org/10.1088/1748-9326/ab4438
